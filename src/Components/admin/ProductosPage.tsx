@@ -6,7 +6,7 @@ import { Toast } from '../Common/Toast';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 import { StatusBadge } from '../Common/StatusBadge';
 import { NuevoProductoModal } from './NuevoProductoModal';
-import { createProduct, getProducts } from '../../services/productService';
+import { createProduct, createProductWithImage, getProducts, inactivateArticle, uploadProductImage } from '../../services/productService';
 import { ProductResponse } from '../../interfaces/IProduct';
 
 export function ProductosPage() {
@@ -31,11 +31,11 @@ export function ProductosPage() {
     } else {
       const newP: Product = {
         name: form.name, categoryId: 7,
-        physicalState: form.physicalState, price: Number(form.price), OwnerId: Number(form.OwnerId),
-        description: form.description,
+        physicalState: form.physicalState, price: Number(form.price), ownerId: Number(form.ownerId),
+        description: form.description, image: form.image
       };
 
-      createProduct(newP).then(created => {
+      createProductWithImage(newP).then(async createdProduct => {
         fetchProducts();
         showToast(`Producto "${form.name}" creado exitosamente`);
       });
@@ -44,7 +44,7 @@ export function ProductosPage() {
 
   const fetchProducts = () => {
     getProducts()
-      .then(data => setProducts(data.filter(p => p.stock > 0)))
+      .then(data =>{ setProducts(data.filter(p => p.estado == "Activo"))})
       .catch(() => showToast("Error al cargar los productos", "danger"));
   }
 
@@ -54,14 +54,16 @@ export function ProductosPage() {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    setProducts(prev => prev.filter(p => p.id !== deleteTarget.id));
+     inactivateArticle(deleteTarget.id).then(async createdProduct => {
+        fetchProducts();
+      });
     showToast("Registro eliminado satisfactoriamente", "danger");
     setDeleteTarget(null);
   };
 
   const toForm = (product: Product): ProductForm => ({
-    name: product.name, categoryId: product.categoryId, price: String(product.price), physicalState: product.physicalState, OwnerId: product.OwnerId,
-    description: product.description, Owner: product.Owner
+    name: product.name, categoryId: product.categoryId, price: String(product.price), physicalState: product.physicalState, ownerId: product.ownerId,
+    description: product.description, owner: product.owner
   });
 
   return (
@@ -109,7 +111,7 @@ export function ProductosPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-gray-700">
-            {products.map(product => (
+            {filtered.map(product => (
               <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-semibold text-gray-900">{product.name}</td>
                 <td className="px-4 py-3 text-xs text-gray-500">{product.categoryName}</td>

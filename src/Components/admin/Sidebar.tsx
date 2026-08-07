@@ -1,23 +1,37 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard, Package, ShoppingCart, Users, Tag, Settings, Store, LogOut, Briefcase, UserCog
+  LayoutDashboard, Package, ShoppingCart, Users, Tag, Settings, Store, LogOut,
+  Briefcase, UserCog, Shield, Warehouse, KeyRound
 } from 'lucide-react';
 import { Page } from '../../Types';
 import { ConfirmDialog } from '../common/ConfirmDialog';
+import { PERMISSION_KEYS, hasPermission } from '../../utils/permissions';
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard",    page: "dashboard"    as Page },
-  { icon: Package,         label: "Productos",    page: "productos"    as Page },
-  { icon: ShoppingCart,    label: "Ventas",       page: "ventas"       as Page },
-  { icon: Users,           label: "Usuarios",     page: "usuarios"     as Page },
-  { icon: UserCog,         label: "Empleados",    page: "empleados"    as Page },
-  { icon: Briefcase,       label: "Propietarios", page: "propietarios" as Page },
-  { icon: Tag,             label: "Categorías",   page: "categorias"   as Page },
-  { icon: Settings,        label: "Configuración",page: "configuracion" as Page },
+const navItems: { icon: any; label: string; page: Page; adminOnly?: boolean; permission?: string }[] = [
+  { icon: LayoutDashboard, label: "Dashboard",     page: "dashboard",     adminOnly: true },
+  { icon: Package,         label: "Productos",     page: "productos" },
+  { icon: Warehouse,       label: "Inventario",    page: "inventario",    permission: PERMISSION_KEYS.INVENTARIO },
+  { icon: ShoppingCart,    label: "Ventas",        page: "ventas" },
+  { icon: Users,           label: "Usuarios",      page: "usuarios",      adminOnly: true },
+  { icon: UserCog,         label: "Empleados",     page: "empleados",     adminOnly: true },
+  { icon: Briefcase,       label: "Propietarios",  page: "propietarios",  permission: PERMISSION_KEYS.PROPIETARIOS },
+  { icon: Tag,             label: "Categorías",    page: "categorias",    permission: PERMISSION_KEYS.CATEGORIAS },
+  { icon: Shield,          label: "Roles",         page: "roles",         permission: PERMISSION_KEYS.ROLES },
+  { icon: KeyRound,        label: "Permisos",      page: "permisos",      adminOnly: true },
+  { icon: Settings,        label: "Configuración", page: "configuracion", adminOnly: true },
 ];
 
-export function Sidebar({ current, onNavigate, onLogout }: { current: Page; onNavigate: (p: Page) => void; onLogout: () => void }) {
+export function Sidebar({ current, onNavigate, onLogout, isAdmin, permissions }: {
+  current: Page; onNavigate: (p: Page) => void; onLogout: () => void; isAdmin: boolean | undefined; permissions: string[];
+}) {
   const [confirmLogout, setConfirmLogout] = useState(false);
+
+  const visibleItems = navItems.filter(item => {
+    if (item.adminOnly) return isAdmin;
+    if (item.permission) return isAdmin || hasPermission(permissions, item.permission);
+    return true;
+  });
+
   return (
     <div className="w-48 bg-[#1a1a2e] flex flex-col h-full flex-shrink-0">
       {confirmLogout && (
@@ -38,7 +52,7 @@ export function Sidebar({ current, onNavigate, onLogout }: { current: Page; onNa
         </div>
       </div>
       <nav className="flex flex-col gap-0.5 p-3 flex-1 overflow-y-auto">
-        {navItems.map((item, i) => {
+        {visibleItems.map((item, i) => {
           const Icon = item.icon;
           const active = current === item.page;
           return (

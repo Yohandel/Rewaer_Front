@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { ProductForm } from '../../Types';
+import { CategoryResponse, owner, ProductForm } from '../../Types';
 import { ADMIN_CATEGORIES } from '../../Data/mockData';
 import { Modal } from '../Common/Modal';
 import { Field } from '../Common/Field';
 import { inputCls, selectCls } from '../../styles/formStyles';
+import { getCategories } from '../../services/categoryService';
+import { Toast } from '../Common/Toast';
+import { getowners } from '../../services/ownerService';
 
-const EMPTY_PRODUCT: ProductForm = { name: "", categoryId: 0, price: "", physicalState: "Buen estado", OwnerId: 2, description: "", Owner: "" };
+const EMPTY_PRODUCT: ProductForm = { name: "", categoryId: 0, price: "", physicalState: "Buen estado", ownerId: 2, description: "", owner: "" };
 
 export function NuevoProductoModal({ onClose, onSave, initialData, editMode = false }: {
   onClose: () => void; onSave: (p: ProductForm, id?: number) => void;
@@ -14,11 +17,18 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
 }) {
   const [form, setForm] = useState<ProductForm>(initialData ?? EMPTY_PRODUCT);
   const [errors, setErrors] = useState<Partial<ProductForm>>({});
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [owners, setowners] = useState<owner[]>([]);
+  const [loadError, setLoadError] = useState("");
   const set = (k: keyof ProductForm, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
+  const [toast, setToast] = useState<{ msg: string; variant: "success" | "danger" } | null>(null);
+  const showToast = (msg: string, variant: "success" | "danger" = "success") => {
+    setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
+  };
 
   const validate = () => {
     const e: Partial<ProductForm> = {};
-    if (!form.name.trim())     e.name     = "Campo requerido";
+    if (!form.name.trim()) e.name = "Campo requerido";
     if (!form.price.trim() || isNaN(Number(form.price))) e.price = "Precio válido requerido";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -31,8 +41,34 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
     onClose();
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = () => {
+    getCategories()
+      .then(data => setCategories(data.filter(c => c.estado)))
+      .catch(() => showToast("Error al cargar las categorías", "danger"));
+    getowners()
+      .then(setowners)
+      .catch(err => setLoadError(err.message || "No se pudieron cargar los propietarios"))
+  }
+
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+
+    if (!e.target.files?.length)
+      return;
+
+    setForm(f => ({
+      ...f,
+      image: e.target.files![0]
+    }));
+  };
   return (
     <Modal title={editMode ? "Editar Producto" : "Nuevo Producto"} onClose={onClose}>
+      {toast && <Toast message={toast.msg} variant={toast.variant} onClose={() => setToast(null)} />}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
@@ -45,7 +81,7 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
           <Field label="Categoría" required>
             <select className={selectCls} value={form.categoryId} onChange={e => set("categoryId", e.target.value)}>
               <option value="">Seleccionar…</option>
-              {ADMIN_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             {errors.categoryId && <p className="text-xs text-red-500 mt-1">{errors.categoryId}</p>}
           </Field>
@@ -61,12 +97,13 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
             {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
           </Field>
 
-          <div className="col-span-2">
-            <Field label="Proveedor" required>
-              <input className={inputCls} placeholder="Ej: TechStore RD" value={form.OwnerId} onChange={e => set("OwnerId", e.target.value)} />
-              {errors.OwnerId && <p className="text-xs text-red-500 mt-1">{errors.OwnerId}</p>}
-            </Field>
-          </div>
+          <Field label="Proveedor" required>
+            <select className={selectCls} value={form.ownerId} onChange={e => set("ownerId", e.target.value)}>
+              <option value="">Seleccionar…</option>
+              {owners.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            </select>
+            {errors.ownerId && <p className="text-xs text-red-500 mt-1">{errors.ownerId}</p>}
+          </Field>
 
           <div className="col-span-2">
             <Field label="Descripción">
@@ -75,8 +112,13 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
           </div>
 
           <div className="col-span-2">
-            <Field label="URL de imagen">
-              <input className={inputCls} placeholder="https://…"  />
+            <Field label="Imagen del producto">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                className={inputCls}
+                onChange={handleImageChange}
+              />
             </Field>
           </div>
         </div>

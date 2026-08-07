@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { ShoppingBag, ChevronRight, Instagram, Facebook, Twitter } from 'lucide-react';
 import { Page, Product } from '../../Types';
 import { PublicNav } from './PublicNav';
-import { StatusBadge } from '../Common/StatusBadge';
 import { ProductResponse } from '../../interfaces/IProduct';
 import { getProducts } from '../../services/productService';
+import { getImageUrl } from '../../utils/image';
+import { StatusBadge } from '../common/StatusBadge';
 
 export function TiendaPublicaPage({ onNavigate, userRole, onLogout, cartCount, onSelectProduct }: {
-  onNavigate: (p: Page) => void; userRole: string | null; 
-  onLogout: () => void; 
-  cartCount: number; 
+  onNavigate: (p: Page) => void; userRole: string | null;
+  onLogout: () => void;
+  cartCount: number;
   onSelectProduct: (productId: number) => void;
   onAddToCart?: (p: ProductResponse) => void;
 }) {
@@ -47,17 +48,21 @@ export function TiendaPublicaPage({ onNavigate, userRole, onLogout, cartCount, o
           <button type="button" onClick={() => onNavigate("catalogo")} className="text-sm text-blue-600 font-medium hover:underline flex items-center gap-1 cursor-pointer">Ver todos <ChevronRight size={14} /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featured.map(p => (
-            <div key={p.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group flex flex-col cursor-pointer" onClick={() => handleProductClick(p.id)}>
+          {featured.map(product => (
+            <div key={product.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group flex flex-col cursor-pointer" onClick={() => handleProductClick(product.id)}>
               <div className="relative aspect-square overflow-hidden bg-slate-100">
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute bottom-3 right-3"><StatusBadge status={p.physicalState} /></div>
+                <img
+                  src={getImageUrl(product.imagenUrl)}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute bottom-3 right-3"><StatusBadge status={product.physicalState} /></div>
               </div>
               <div className="p-4 flex flex-col flex-grow justify-between">
-                <h3 className="font-bold text-slate-900 group-hover:text-blue-600 text-sm line-clamp-1">{p.name}</h3>
+                <h3 className="font-bold text-slate-900 group-hover:text-blue-600 text-sm line-clamp-1">{product.name}</h3>
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-lg font-extrabold text-slate-900">${p.price}</span>
-                  <span className="text-xs text-slate-400">{p.categoryName}</span>
+                  <span className="text-lg font-extrabold text-slate-900">${product.price}</span>
+                  <span className="text-xs text-slate-400">{product.categoryName}</span>
                 </div>
               </div>
             </div>

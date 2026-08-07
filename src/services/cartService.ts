@@ -23,5 +23,5 @@ export function removeCartItem(cartDetailId: number) {
 }
 
 export function checkoutCart(cartId: number) {
-  return apiRequest<{ message: string }>('/api/Cart/checkout', { method: 'POST', body: { cartId } });
+  return apiRequest<CartItemApi>('/api/Cart/checkout', { method: 'POST', body: { cartId } });
 }

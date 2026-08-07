@@ -6,6 +6,10 @@ import { Toast } from '../common/Toast';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmployeeModal } from './EmployeeModal';
+import { getRoles } from '../../services/roleService';
+import { Role } from '../../Types';
+import { Pagination } from '../Common/Pagination';
+import { usePagination } from '../../hooks/usePagination';
 
 export function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -15,6 +19,13 @@ export function EmployeesPage() {
   const [modal, setModal] = useState<{ mode: "create" | "edit"; data?: Employee } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
   const [toast, setToast] = useState<{ msg: string; variant: "success" | "danger" } | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  useEffect(() => { getRoles().then(setRoles).catch(() => { }); }, []);
+  const filtered = employees.filter(e =>
+    `${e.nombre} ${e.apellido}`.toLowerCase().includes(search.toLowerCase()) || e.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const { page, setPage, totalPages, pageItems } = usePagination(filtered, 8);
 
   const showToast = (msg: string, variant: "success" | "danger" = "success") => {
     setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
@@ -30,9 +41,6 @@ export function EmployeesPage() {
 
   useEffect(() => { load(); }, []);
 
-  const filtered = employees.filter(e =>
-    `${e.nombre} ${e.apellido}`.toLowerCase().includes(search.toLowerCase()) || e.email.toLowerCase().includes(search.toLowerCase())
-  );
 
   const openEdit = async (emp: Employee) => {
     try {
@@ -116,15 +124,17 @@ export function EmployeesPage() {
             <tr>
               <th className="px-4 py-3">Nombre</th>
               <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Rol</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-gray-700">
-            {filtered.map(e => (
+            {pageItems.map(e => (
               <tr key={e.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-semibold text-gray-900">{e.nombre} {e.apellido}</td>
                 <td className="px-4 py-3 text-xs text-gray-500">{e.email}</td>
+                <td className="px-4 py-3"><span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-semibold">{e.rol}</span></td>
                 <td className="px-4 py-3"><StatusBadge status={e.estado} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -138,6 +148,7 @@ export function EmployeesPage() {
         </table>
         {!loading && filtered.length === 0 && <div className="py-12 text-center text-gray-400 text-sm">No hay empleados registrados.</div>}
         {loading && <div className="py-12 text-center text-gray-400 text-sm">Cargando…</div>}
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} />
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Owner, OwnerCreateDto, OwnerUpdateDto } from '../../Types';
-import { Modal } from '../common/Modal';
-import { Field } from '../common/Field';
+import { owner, ownerCreateDto, ownerUpdateDto } from '../../Types';
+import { Modal } from '../Common/Modal';
+import { Field } from '../Common/Field';
 import { inputCls, selectCls } from '../../styles/formStyles';
 
 type FormState = {
@@ -14,9 +14,9 @@ const EMPTY: FormState = { nombre: "", apellido: "", email: "", telefono: "", di
 
 export function OwnerModal({ onClose, onCreate, onUpdate, initialData, editMode = false }: {
   onClose: () => void;
-  onCreate: (dto: OwnerCreateDto) => Promise<void>;
-  onUpdate: (id: number, dto: OwnerUpdateDto) => Promise<void>;
-  initialData?: Owner;
+  onCreate: (dto: ownerCreateDto) => Promise<void>;
+  onUpdate: (id: number, dto: ownerUpdateDto) => Promise<void>;
+  initialData?: owner;
   editMode?: boolean;
 }) {
   const [form, setForm] = useState<FormState>(

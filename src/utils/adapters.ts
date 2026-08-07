@@ -11,11 +11,11 @@ export function adaptArticleToProduct(a: Article): ProductResponse {
         physicalState: a.physicalState,
         price: a.price,
         stock: a.stock,
-        Owner: a.owner,
+        owner: a.owner,
         image: PLACEHOLDER_IMAGE,
         description: a.description,
         categoryId: a.categoryId,
-        OwnerId: a.ownerId,
+        ownerId: a.ownerId,
     };
 }
 
@@ -31,11 +31,11 @@ export function adaptCartItem(item: CartItemApi, knownProducts: ProductResponse[
             originalPrice: null,
             offer: false,
             stock: item.quantity,
-            Owner: "",
+            owner: "",
             image: PLACEHOLDER_IMAGE,
             description: "",
             categoryId: 0,
-            OwnerId: 0,
+            ownerId: 0,
 
         };
 

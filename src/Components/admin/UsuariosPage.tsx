@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, Info } from 'lucide-react';
 import { ClientApi } from '../../Types';
 import { getClientes } from '../../services/clientService';
-import { StatusBadge } from '../common/StatusBadge';
+import { StatusBadge } from '../Common/StatusBadge';
 
 export function UsuariosPage() {
   const [clientes, setClientes] = useState<ClientApi[]>([]);
@@ -34,10 +34,10 @@ export function UsuariosPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex items-start gap-2 bg-blue-50 border border-blue-100 text-blue-700 text-xs rounded-lg p-3">
+      {/* <div className="mb-4 flex items-start gap-2 bg-blue-50 border border-blue-100 text-blue-700 text-xs rounded-lg p-3">
         <Info size={14} className="shrink-0 mt-0.5" />
         <span>Esta vista es de solo lectura — la API actualmente no expone edición ni eliminación de clientes.</span>
-      </div>
+      </div> */}
 
       {loadError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs">{loadError}</div>}
 

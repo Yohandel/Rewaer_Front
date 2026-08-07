@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ShoppingCart as CartIcon, Clock } from 'lucide-react';
 import { Page, Product } from '../../Types';
 import { PublicNav } from './PublicNav';
-import { StatusBadge } from '../Common/StatusBadge';
-import { Toast } from '../Common/Toast';
 import { ProductResponse } from '../../interfaces/IProduct';
+import { getImageUrl } from '../../utils/image';
+import { getProductById } from '../../services/productService';
+import { StatusBadge } from '../common/StatusBadge';
+import { Toast } from '../common/Toast';
 
 export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, onAddToCart, cartCount }: {
   product: ProductResponse | null; onNavigate: (p: Page) => void; userRole: string | null; onLogout: () => void;
@@ -12,6 +14,7 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
 }) {
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState(false);
+  const [selectedProduct, setselectedProduct] = useState<ProductResponse>();
   const isAuth = userRole === "client" || userRole === "admin";
   const requireAuth = () => { setToast(true); setTimeout(() => { onNavigate("login"); }, 1200); };
 
@@ -24,6 +27,9 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
     );
   }
 
+  useEffect(() => {
+      getProductById(product?.id).then(res => console.log(res)).catch(err => setProductsError(err.message || "No se pudo cargar el catálogo"));
+    }, []);
   const p = product;
   const handleCart = () => {
     if (!isAuth) { requireAuth(); return; }
@@ -42,7 +48,7 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="relative bg-slate-100 h-72 md:h-auto">
-              <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+              <img src={getImageUrl(product.imagenUrl)} alt={p.name} className="w-full h-full object-cover" />
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 <StatusBadge status={p.physicalState} />
               </div>
@@ -54,6 +60,9 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
                 <div className="space-y-3">
                   <div className="flex items-center justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-500 font-medium">Precio</span>
+                    <span className="text-sm font-bold">
+                      {p.price}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-500 font-medium">Estado del producto</span>
@@ -61,7 +70,7 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
                   </div>
                   <div className="flex items-center justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-500 font-medium">Proveedor</span>
-                    <span className="text-sm font-semibold text-slate-800">{p.Owner}</span>
+                    <span className="text-sm font-semibold text-slate-800">{p.owner}</span>
                   </div>
                   <div className="flex items-center justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-500 font-medium">Ejemplares disponibles</span>
@@ -88,4 +97,8 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
       </div>
     </div>
   );
+}
+
+function setProductsError(arg0: any): any {
+  throw new Error('Function not implemented.');
 }

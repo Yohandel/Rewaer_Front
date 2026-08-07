@@ -2,24 +2,27 @@ import { ProductResponse } from "../interfaces/IProduct";
 
 export type Page =
   | "productos" | "ventas" | "usuarios" | "dashboard" | "categorias" | "configuracion"
-  | "empleados" | "propietarios"| "tienda" | "registro" | "login" | "catalogo" | "ofertas" 
-  | "contacto"| "detalle" | "carrito";
+  | "empleados" | "propietarios" | "roles" | "inventario" | "permisos"
+  | "tienda" | "registro" | "login"
+  | "catalogo" | "ofertas" | "contacto"
+  | "detalle" | "carrito";
 
 export type Product = {
   name: string;
   categoryId: number;
   physicalState: string;
   price: number;
-  Owner?: string;
-  OwnerId: number;
+  owner?: string;
+  ownerId: number;
   description: string;
+  image?: File
 };
 
 export type CartItem = { product: ProductResponse; qty: number; cartDetailId?: number };
 
 export type ProductForm = {
   name: string; description: string; price: string; physicalState: string;
-  categoryId: number; OwnerId: number; Owner?: string;
+  categoryId: number; ownerId: number; owner?: string; image?: File
 };
 
 export type CatForm = { name: string; description: string };
@@ -36,6 +39,8 @@ export type AuthUser = {
   nombre: string;
   email: string;
   role: "admin" | "client";
+  roleName: string | null;
+  permissions: string[]; // nombres de permisos asignados (solo aplica a empleados)
   token: string;
   raw: any;
 };
@@ -85,6 +90,7 @@ export type Employee = {
   direccion?: string;
   estado: string;   // estado_laboral
   rolId?: number;
+  rol?:string
 };
 
 export type EmployeeCreateDto = {
@@ -99,7 +105,7 @@ export type EmployeeUpdateDto = {
 };
 
 // ── Propietarios ──
-export type Owner = {
+export type owner = {
   id: number;
   nombre: string;
   apellido: string;
@@ -110,12 +116,12 @@ export type Owner = {
   estado: string;
 };
 
-export type OwnerCreateDto = {
+export type ownerCreateDto = {
   nombre: string; apellido: string; email: string; telefono: string;
   porcentaje_comision: number; direccion: string; estado: string;
 };
 
-export type OwnerUpdateDto = {
+export type ownerUpdateDto = {
   nombre: string; apellido: string; email: string; telefono: string;
   porcentaje_comision: number; direccion: string;
 };
@@ -147,4 +153,28 @@ export type OrderDetailItem = {
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
+};
+
+// ── Roles ──
+export type Role = { id: number; nombre: string; descripcion: string };
+export type RoleDto = { nombre: string; descripcion: string };
+
+// ── Permisos ──
+export type Permission = { id: number; nombre: string; descripcion: string };
+export type PermissionDto = { nombre_permiso: string; descripcion: string };
+export type EmployeePermissionPayload = { id_empleado: number; id_permiso: number };
+export type EmployeePermissionItem = { idPermiso: number; nombre: string; descripcion: string };
+
+// ── Inventario ──
+export type InventoryDto = { id_articulo: number; cantidad: number; ubicacion_almacen: string };
+
+// ── Dashboard ──
+export type DashboardData = {
+  totalClientes: number;
+  totalEmpleados: number;
+  totalArticulos: number;
+  ventasTotales: number;
+  pedidosPendientes: number;
+  pedidosCompletados: number;
+  articulosSinStock: number;
 };

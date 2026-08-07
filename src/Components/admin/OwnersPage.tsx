@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
-import { Owner, OwnerCreateDto, OwnerUpdateDto } from '../../Types';
-import { getOwners, getOwner, createOwner, updateOwner, deactivateOwner } from '../../services/ownerService';
-import { Toast } from '../common/Toast';
-import { ConfirmDialog } from '../common/ConfirmDialog';
-import { StatusBadge } from '../common/StatusBadge';
-import { OwnerModal } from './OwnerModal';
+import { owner, ownerCreateDto, ownerUpdateDto } from '../../Types';
+import { getowners, getowner, createowner, updateowner, deactivateowner } from '../../services/ownerService';
+import { Toast } from '../Common/Toast';
+import { ConfirmDialog } from '../Common/ConfirmDialog';
+import { StatusBadge } from '../Common/StatusBadge';
+import { OwnerModal } from './ownerModal';
 
 export function OwnersPage() {
-  const [owners, setOwners] = useState<Owner[]>([]);
+  const [owners, setowners] = useState<owner[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
-  const [modal, setModal] = useState<{ mode: "create" | "edit"; data?: Owner } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Owner | null>(null);
+  const [modal, setModal] = useState<{ mode: "create" | "edit"; data?: owner } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<owner | null>(null);
   const [toast, setToast] = useState<{ msg: string; variant: "success" | "danger" } | null>(null);
 
   const showToast = (msg: string, variant: "success" | "danger" = "success") => {
@@ -22,9 +22,9 @@ export function OwnersPage() {
 
   const load = () => {
     setLoading(true);
-    getOwners()
-      .then(setOwners)
-      .catch(err => setLoadError(err.message || "No se pudieron cargar los propietarios"))
+    getowners()
+      .then(setowners)
+      .catch(err => setLoadError(err.message || "No se pudieron cargar los proveedor"))
       .finally(() => setLoading(false));
   };
 
@@ -34,23 +34,23 @@ export function OwnersPage() {
     `${o.nombre} ${o.apellido}`.toLowerCase().includes(search.toLowerCase()) || o.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const openEdit = async (owner: Owner) => {
+  const openEdit = async (owner: owner) => {
     try {
-      const detail = await getOwner(owner.id); // trae "porcentaje" en vez de "comision"
+      const detail = await getowner(owner.id); // trae "porcentaje" en vez de "comision"
       setModal({ mode: "edit", data: { ...owner, ...detail, comision: detail.porcentaje ?? owner.comision } });
     } catch {
       setModal({ mode: "edit", data: owner });
     }
   };
 
-  const handleCreate = async (dto: OwnerCreateDto) => {
-    await createOwner(dto);
+  const handleCreate = async (dto: ownerCreateDto) => {
+    await createowner(dto);
     showToast(`Propietario "${dto.nombre}" creado exitosamente`);
     load();
   };
 
-  const handleUpdate = async (id: number, dto: OwnerUpdateDto) => {
-    await updateOwner(id, dto);
+  const handleUpdate = async (id: number, dto: ownerUpdateDto) => {
+    await updateowner(id, dto);
     showToast(`Propietario "${dto.nombre}" actualizado exitosamente`);
     load();
   };
@@ -58,7 +58,7 @@ export function OwnersPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deactivateOwner(deleteTarget.id);
+      await deactivateowner(deleteTarget.id);
       showToast("Propietario desactivado satisfactoriamente", "danger");
       setDeleteTarget(null);
       load();
@@ -82,7 +82,7 @@ export function OwnersPage() {
       )}
       {deleteTarget && (
         <ConfirmDialog
-          title="¿Desactivar propietario?"
+          title="¿Desactivar proveedor?"
           message={`¿Estás seguro de que deseas desactivar a "${deleteTarget.nombre} ${deleteTarget.apellido}"?`}
           confirmLabel="Sí, desactivar"
           danger
@@ -93,8 +93,8 @@ export function OwnersPage() {
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-lg font-bold text-gray-800">Propietarios</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Gestiona los propietarios de artículos — {owners.length} registrados</p>
+          <h1 className="text-lg font-bold text-gray-800">Proveedor</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Gestiona los proveedor de artículos — {owners.length} registrados</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
@@ -140,7 +140,7 @@ export function OwnersPage() {
             ))}
           </tbody>
         </table>
-        {!loading && filtered.length === 0 && <div className="py-12 text-center text-gray-400 text-sm">No hay propietarios registrados.</div>}
+        {!loading && filtered.length === 0 && <div className="py-12 text-center text-gray-400 text-sm">No hay proveedor registrados.</div>}
         {loading && <div className="py-12 text-center text-gray-400 text-sm">Cargando…</div>}
       </div>
     </div>

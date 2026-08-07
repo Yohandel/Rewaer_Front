@@ -3,6 +3,7 @@ import { ShoppingCart as CartIcon, Clock } from 'lucide-react';
 import { Product } from '../../Types';
 import { StatusBadge } from '../Common/StatusBadge';
 import { ProductResponse } from '../../interfaces/IProduct';
+import { getImageUrl } from '../../utils/image';
 
 export function ProductCard({ product, onDetail, onRequireAuth, onAddToCart, userRole, small = false }:
   { product: ProductResponse; onDetail: () => void; onRequireAuth: () => void; onAddToCart: (p: ProductResponse) => void; userRole: string | null; small?: boolean }) {
@@ -21,7 +22,8 @@ export function ProductCard({ product, onDetail, onRequireAuth, onAddToCart, use
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all flex flex-col group">
       <div className={`relative overflow-hidden bg-slate-100 cursor-pointer ${small ? "h-36" : "aspect-square"}`} onClick={onDetail}>
-        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={getImageUrl(product.imagenUrl)}
+          alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           <StatusBadge status={product.physicalState} />
         </div>

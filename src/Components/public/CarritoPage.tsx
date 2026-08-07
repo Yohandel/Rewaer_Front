@@ -3,6 +3,7 @@ import { ArrowLeft, ShoppingCart as CartIcon, X, CheckCircle } from 'lucide-reac
 import { CartItem, Page } from '../../Types';
 import { PublicNav } from './PublicNav';
 import { StatusBadge } from '../Common/StatusBadge';
+import { getImageUrl } from '../../utils/image';
 
 export function CarritoPage({ onNavigate, userRole, onLogout, cart, onUpdateQty, onRemove, onCheckout, cartCount }: {
   onNavigate: (p: Page) => void; userRole: string | null; onLogout: () => void;
@@ -48,7 +49,7 @@ export function CarritoPage({ onNavigate, userRole, onLogout, cart, onUpdateQty,
               {cart.map(({ product: p, qty, cartDetailId }) => (
                 <div key={cartDetailId ?? p.id} className="bg-white rounded-2xl border border-slate-200 p-4 flex gap-4 shadow-sm">
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(p.imagenUrl)} alt={p.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">

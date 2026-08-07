@@ -7,7 +7,8 @@ export interface ProductResponse {
   categoryId: number;
   categoryName: string;
   stock: number;
-  Owner: string;
-  OwnerId: number;
-  image: string;
+  owner: string;
+  ownerId: number;
+  imagenUrl: string;
+  estado:string
 };

@@ -1,22 +1,22 @@
 import { apiRequest } from './httpClient';
-import { Owner, OwnerCreateDto, OwnerUpdateDto } from '../Types';
+import { owner, ownerCreateDto, ownerUpdateDto } from '../Types';
 
-export function getOwners() {
-  return apiRequest<Owner[]>('/api/Owner');
+export function getowners() {
+  return apiRequest<owner[]>('/api/owner');
 }
 
-export function getOwner(id: number) {
-  return apiRequest<any>(`/api/Owner/${id}`); // el detalle trae "porcentaje" en vez de "comision"
+export function getowner(id: number) {
+  return apiRequest<any>(`/api/owner/${id}`); // el detalle trae "porcentaje" en vez de "comision"
 }
 
-export function createOwner(dto: OwnerCreateDto) {
-  return apiRequest<void>('/api/Owner', { method: 'POST', body: dto });
+export function createowner(dto: ownerCreateDto) {
+  return apiRequest<void>('/api/owner', { method: 'POST', body: dto });
 }
 
-export function updateOwner(id: number, dto: OwnerUpdateDto) {
-  return apiRequest<void>(`/api/Owner/${id}`, { method: 'PUT', body: dto });
+export function updateowner(id: number, dto: ownerUpdateDto) {
+  return apiRequest<void>(`/api/owner/${id}`, { method: 'PUT', body: dto });
 }
 
-export function deactivateOwner(id: number) {
-  return apiRequest<void>(`/api/Owner/${id}`, { method: 'DELETE' });
+export function deactivateowner(id: number) {
+  return apiRequest<void>(`/api/owner/${id}`, { method: 'DELETE' });
 }
