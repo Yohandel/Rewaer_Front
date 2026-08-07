@@ -10,6 +10,9 @@ export function getOrderDetails(id: number) {
   return apiRequest<OrderDetailItem[]>(`/api/Order/${id}/details`);
 }
 
+export function getMyOrders(clientId: number) {
+  return apiRequest<Order[]>(`/api/Order/my-orders/${clientId}`);
+}
 export function cancelOrder(id: number) {
   return apiRequest<{ message: string }>(`/api/Order/${id}/cancel`, { method: 'PUT' });
 }

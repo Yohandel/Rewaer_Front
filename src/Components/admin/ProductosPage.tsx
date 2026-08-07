@@ -30,7 +30,7 @@ export function ProductosPage() {
       showToast(`Producto "${form.name}" actualizado exitosamente`);
     } else {
       const newP: Product = {
-        name: form.name, categoryId: 7,
+        name: form.name, categoryId: form.categoryId,
         physicalState: form.physicalState, price: Number(form.price), ownerId: Number(form.ownerId),
         description: form.description, image: form.image
       };

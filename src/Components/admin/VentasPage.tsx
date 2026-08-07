@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { FileCheck, Truck, XCircle, Eye } from 'lucide-react';
 import { Order } from '../../Types';
 import { getOrders, cancelOrder, invoiceOrder, deliverOrder } from '../../services/orderService';
-import { Toast } from '../common/Toast';
+import { Toast } from '../Common/Toast';
 import { ConfirmDialog } from '../common/ConfirmDialog';
-import { StatusBadge } from '../common/StatusBadge';
+import { StatusBadge } from '../Common/StatusBadge';
 import { OrderDetailsModal } from './OrderDetailsModal';
 
 const STATUS_FILTERS = ["Todos", "Pendiente", "Facturado", "Entregado", "Cancelado"];
@@ -36,9 +36,9 @@ export function VentasPage() {
     if (!confirmAction) return;
     const { order, type } = confirmAction;
     try {
-      if (type === "cancel")  { await cancelOrder(order.idPedido);  showToast(`Pedido #${order.idPedido} cancelado`, "danger"); }
-      if (type === "invoice") { await invoiceOrder(order.idPedido); showToast(`Pedido #${order.idPedido} facturado`); }
-      if (type === "deliver") { await deliverOrder(order.idPedido); showToast(`Pedido #${order.idPedido} entregado`); }
+      if (type === "cancel")  { await cancelOrder(order.pedidoId);  showToast(`Pedido #${order.pedidoId} cancelado`, "danger"); }
+      if (type === "invoice") { await invoiceOrder(order.pedidoId); showToast(`Pedido #${order.pedidoId} facturado`); }
+      if (type === "deliver") { await deliverOrder(order.pedidoId); showToast(`Pedido #${order.pedidoId} entregado`); }
       setConfirmAction(null);
       load(activeFilter);
     } catch (err: any) {
@@ -95,8 +95,8 @@ export function VentasPage() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-700">
               {orders.map(o => (
-                <tr key={o.idPedido} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 font-mono text-xs">#{o.idPedido}</td>
+                <tr key={o.pedidoId} className="hover:bg-gray-50">
+                  <td className="px-6 py-3 font-mono text-xs">#{o.pedidoId}</td>
                   <td className="px-6 py-3 text-xs">{String(o.fecha).slice(0, 10)}</td>
                   <td className="px-6 py-3 font-semibold">{o.cliente}</td>
                   <td className="px-6 py-3 font-bold">${Number(o.total).toFixed(2)}</td>

@@ -1,28 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Menu, ShoppingCart as CartIcon, LogOut } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Menu, ShoppingBag, ShoppingCart as CartIcon, LogOut, User, Package, ChevronDown } from 'lucide-react';
 import { Page } from '../../Types';
-import { ConfirmDialog } from '../Common/ConfirmDialog';
-import { getMe } from '../../services/authservice';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 import { MeResponse } from '../../interfaces/IMeResponse';
+import { getMe } from '../../services/authService';
 
 export function PublicNav({ onNavigate, userRole, onLogout, currentPage, cartCount }: {
   onNavigate: (p: Page) => void; userRole: string | null; onLogout: () => void; currentPage: Page; cartCount: number;
 }) {
   const [open, setOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<MeResponse | null>(null);
+  const [clientMenuOpen, setClientMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
-  const link = (label: string, page: Page) => (
-    <button type="button" onClick={() => { onNavigate(page); setOpen(false); }}
-      className={`text-sm font-medium transition-colors cursor-pointer ${currentPage === page ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`}>
-      {label}
-    </button>
-  );
+  const [currentUser, setCurrentUser] = useState<MeResponse | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setClientMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     getMe()
       .then(me => setCurrentUser(me))
       .catch(() => setCurrentUser(null));
   }, []);
+
+  const link = (label: string, page: Page) => (
+    <button type="button" onClick={() => { onNavigate(page); setOpen(false); }}
+      className={`text-sm font-medium transition-colors cursor-pointer ${currentPage === page ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`}>
+      {label}
+    </button>
+  );
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
@@ -38,13 +50,12 @@ export function PublicNav({ onNavigate, userRole, onLogout, currentPage, cartCou
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate("tienda")}>
-            <svg className="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+            <ShoppingBag className="w-6 h-6 text-blue-600" />
             <span className="text-xl font-bold tracking-tight text-slate-900">ReWear</span>
           </div>
           <nav className="hidden md:flex space-x-8">
             {link("Inicio", "tienda")}
             {link("Catálogo", "catalogo")}
-
             {link("Contacto", "contacto")}
           </nav>
           <div className="hidden md:flex items-center gap-3">
@@ -64,12 +75,30 @@ export function PublicNav({ onNavigate, userRole, onLogout, currentPage, cartCou
             </button>
 
             {userRole === "client" ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
+              <div className="relative" ref={menuRef}>
+                <button type="button" onClick={() => setClientMenuOpen(v => !v)}
+                  className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer">
                   <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">C</div>
                   <span className="text-xs font-medium text-blue-900">{currentUser?.name}</span>
-                </div>
-                <button type="button" onClick={() => setConfirmLogout(true)} className="p-1.5 text-slate-400 hover:text-red-500 rounded-full transition-colors cursor-pointer"><LogOut className="w-4 h-4" /></button>
+                  <ChevronDown size={13} className="text-blue-700" />
+                </button>
+                {clientMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-slate-200 shadow-lg py-1.5 z-50">
+                    <button type="button" onClick={() => { onNavigate("mi-perfil"); setClientMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer">
+                      <User size={14} />Mi perfil
+                    </button>
+                    <button type="button" onClick={() => { onNavigate("mis-pedidos"); setClientMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer">
+                      <Package size={14} />Mis pedidos
+                    </button>
+                    <div className="border-t border-slate-100 my-1" />
+                    <button type="button" onClick={() => { setConfirmLogout(true); setClientMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer">
+                      <LogOut size={14} />Cerrar sesión
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -84,6 +113,14 @@ export function PublicNav({ onNavigate, userRole, onLogout, currentPage, cartCou
       {open && (
         <div className="md:hidden bg-white border-t border-slate-100 px-4 py-3 flex flex-col gap-3">
           {link("Inicio", "tienda")}{link("Catálogo", "catalogo")}{link("Contacto", "contacto")}
+          {userRole === "client" && (
+            <>
+              <div className="border-t border-slate-100 pt-3" />
+              {link("Mi perfil", "mi-perfil")}
+              {link("Mis pedidos", "mis-pedidos")}
+              <button type="button" onClick={onLogout} className="text-sm font-medium text-red-500 text-left cursor-pointer">Cerrar sesión</button>
+            </>
+          )}
         </div>
       )}
     </header>

@@ -5,8 +5,8 @@ import { PublicNav } from './PublicNav';
 import { ProductResponse } from '../../interfaces/IProduct';
 import { getImageUrl } from '../../utils/image';
 import { getProductById } from '../../services/productService';
-import { StatusBadge } from '../common/StatusBadge';
-import { Toast } from '../common/Toast';
+import { StatusBadge } from '../Common/StatusBadge';
+import { Toast } from '../Common/Toast';
 
 export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, onAddToCart, cartCount }: {
   product: ProductResponse | null; onNavigate: (p: Page) => void; userRole: string | null; onLogout: () => void;
