@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Employee, EmployeeCreateDto, EmployeeUpdateDto } from '../../Types';
-import { Modal } from '../common/Modal';
-import { Field } from '../common/Field';
+import { Modal } from '../Common/Modal';
+import { Field } from '../Common/Field';
 import { inputCls, selectCls } from '../../styles/formStyles';
 
 // Ajusta estos IDs si tu tabla de roles usa otros valores
@@ -42,9 +42,9 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
 
   const validate = () => {
     const e: Partial<Record<keyof FormState, string>> = {};
-    if (!form.nombre.trim())   e.nombre   = "Campo requerido";
+    if (!form.nombre.trim()) e.nombre = "Campo requerido";
     if (!form.apellido.trim()) e.apellido = "Campo requerido";
-    if (!form.email.trim())    e.email    = "Campo requerido";
+    if (!form.email.trim()) e.email = "Campo requerido";
     if (!form.telefono.trim()) e.telefono = "Campo requerido";
     if (!editMode && (!form.contrasena.trim() || form.contrasena.length < 4)) e.contrasena = "Mínimo 4 caracteres";
     setErrors(e);
@@ -65,7 +65,7 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
       } else {
         await onCreate({
           nombre: form.nombre, apellido: form.apellido, email: form.email, telefono: form.telefono,
-          contrasena: form.contrasena, fecha_ingreso: form.fecha_ingreso,
+          contrasena: form.contrasena,
           estado_laboral: form.estado_laboral, id_rol: Number(form.id_rol), direccion: form.direccion,
         });
       }
@@ -121,9 +121,6 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
               <Field label="Contraseña" required>
                 <input type="password" className={inputCls} value={form.contrasena} onChange={e => set("contrasena", e.target.value)} />
                 {errors.contrasena && <p className="text-xs text-red-500 mt-1">{errors.contrasena}</p>}
-              </Field>
-              <Field label="Fecha de ingreso" required>
-                <input type="date" className={inputCls} value={form.fecha_ingreso} onChange={e => set("fecha_ingreso", e.target.value)} />
               </Field>
             </>
           )}

@@ -9,6 +9,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { OrderDetailModalClient } from './OrderDetailModalClient';
 import { ProductResponse } from '../../interfaces/IProduct';
 import { Toast } from '../Common/Toast';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 
 export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clientId }: {
   onNavigate: (p: Page) => void; userRole: string | null; onLogout: () => void; cartCount: number;
@@ -18,6 +19,8 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [detailTarget, setDetailTarget] = useState<Order | null>(null);
+  const [confirmCancel, setconfirmCancel] = useState(false);
+  const [currentPedidoId, setcurrentPedidoId] = useState(0)
   const [toast, setToast] = useState<{ msg: string; variant: "success" | "danger" } | null>(null);
   const showToast = (msg: string, variant: "success" | "danger" = "success") => {
     setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
@@ -37,11 +40,9 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
   const { page, setPage, totalPages, pageItems } = usePagination(orders, 8);
 
   const cancelMyOrder = (pedidoId: number) => {
-    useEffect(() => {
-      cancelOrder(pedidoId).then(res => {
-        showToast("¡Pedido creado correctamente!", "success");
-      })
-    }, [])
+    cancelOrder(pedidoId).then(res => {
+      showToast("¡Pedido creado correctamente!", "success");
+    })
 
   }
 
@@ -49,6 +50,15 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
     <div className="flex flex-col min-h-screen bg-slate-50">
       {detailTarget && <OrderDetailModalClient order={detailTarget} onClose={() => setDetailTarget(null)} />}
       {toast && <Toast message={toast.msg} variant={toast.variant} onClose={() => setToast(null)} />}
+      {confirmCancel && (
+        <ConfirmDialog
+          title="¿Cancelar Orden?"
+          message="¿Estás seguro de que deseas cancelar su orden? Esta acción no se puede deshacer"
+          confirmLabel="Sí, cancelar"
+          onConfirm={() => { cancelMyOrder(currentPedidoId); setconfirmCancel(false)}}
+          onCancel={() => setconfirmCancel(false)}
+        />
+      )}
       <PublicNav onNavigate={onNavigate} userRole={userRole} onLogout={onLogout} currentPage="mis-pedidos" cartCount={cartCount} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
         <div className="flex items-center gap-3 mb-6">
@@ -99,7 +109,7 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
                       <button type="button" onClick={() => setDetailTarget(order)}
                         className="p-1.5 hover:bg-blue-50 rounded-lg cursor-pointer inline-flex"><Eye size={14} className="text-blue-500" /></button>
                       {(order.estado !== "Facturado" && order.estado !== "Entregado") && (
-                        <button type="button" onClick={() => cancelMyOrder(order.pedidoId)} title="Cancelar"
+                        <button type="button" onClick={() => { setconfirmCancel(true); setcurrentPedidoId(order.pedidoId) }} title="Cancelar"
                           className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"><XCircle size={14} className="text-red-500" /></button>
                       )}
 

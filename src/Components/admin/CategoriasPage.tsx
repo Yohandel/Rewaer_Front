@@ -5,6 +5,8 @@ import { Toast } from '../Common/Toast';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 import { NuevaCategoriaModal } from './NuevaCategoriaModal';
 import { createCategory, deleteCategory, getCategories, updateCategory } from '../../services/categoryService';
+import { Pagination } from '../Common/Pagination';
+import { usePagination } from '../../hooks/usePagination';
 
 export function CategoriasPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -59,6 +61,7 @@ export function CategoriasPage() {
       .then(data => setCategories(data.filter(c => c.estado)))
       .catch(() => showToast("Error al cargar las categorías", "danger"));
   }
+  const { page, setPage, totalPages, pageItems } = usePagination(filtered, 8);
 
   return (
     <div className="flex flex-col h-full overflow-auto">
@@ -85,7 +88,7 @@ export function CategoriasPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div>
           <h1 className="text-lg font-bold text-gray-800">Gestión de Categorías</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Administra las categorías del catálogo — {categories.length + 1} categorías</p>
+          <p className="text-xs text-gray-500 mt-0.5">Administra las categorías del catálogo — {categories.length} categorías</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
@@ -111,7 +114,7 @@ export function CategoriasPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-700">
-              {filtered.map(cat => (
+              {pageItems.map(cat => (
                 <tr key={cat.id} className="hover:bg-gray-50 transition-colors group">
                   <td className="px-6 py-3"><span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{cat.id}</span></td>
                   <td className="px-6 py-3 font-medium">
@@ -134,8 +137,8 @@ export function CategoriasPage() {
           {categories.length === 0 && (
             <div className="py-12 text-center text-gray-400 text-sm">
               {search ? `No se encontraron categorías para "${search}".` : "No hay categorías. ¡Crea la primera!"}
-            </div>
-          )}
+            </div>)}
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
         </div>
       </div>
     </div>
