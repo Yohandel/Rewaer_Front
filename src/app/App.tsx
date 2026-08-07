@@ -3,7 +3,7 @@ import { Page, CartItem, Product, LoginMode, AuthUser } from '../Types';
 import { getMe } from '../services/authService';
 import { getStoredAuth, setStoredAuth, clearStoredAuth } from '../utils/authStorage';
 import { getProducts } from '../services/productService';
-import { addCartItem, getCart, updateCartItemQuantity, removeCartItem, checkoutCart, getCartByClientId } from '../services/cartService';
+import { addCartItem, getCart, updateCartItemQuantity, removeCartItem, checkoutCart, getCartByClient } from '../services/cartService';
 import { adaptCartItem } from '../utils/adapters';
 
 import { Sidebar } from '../Components/admin/Sidebar';
@@ -33,7 +33,9 @@ import { ProductResponse } from '../interfaces/IProduct';
 import { getMyPermissionNames } from '../services/permissionService';
 import { PermissionsPage } from '../Components/admin/PermissionsPage';
 import { PERMISSION_KEYS, hasPermission } from '../utils/permissions';
-import { Toast } from '../Components/common/Toast';
+import { Toast } from '../Components/Common/Toast';
+import { MisPedidosPage } from '../Components/public/MisPedidosPage';
+import { MiPerfilPage } from '../Components/public/MiPerfilPage';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<Page>("tienda");
@@ -45,9 +47,6 @@ export default function App() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cartId, setCartId] = useState<number | null>(null);
-  useEffect(() => {
-    getClientCart(authUser?.id as number);
-  }, [authUser]);
 
   const isAdmin = authUser?.roleName?.includes('Admin');
   const permissions = authUser?.permissions ?? [];
@@ -59,6 +58,14 @@ export default function App() {
     setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
   };
 
+  useEffect(() => {
+    if (authUser?.role === "client") {
+      getClientCart(authUser?.id as number);
+    }
+    else {
+      setCartId(null);
+    }
+  }, [authUser]);
 
   useEffect(() => {
     getProducts().then(setProducts).catch(err => setProductsError(err.message || "No se pudo cargar el catálogo"));
@@ -140,14 +147,11 @@ export default function App() {
   const handleCheckout = async () => {
     if (!cartId) return;
     try {
-      await checkoutCart(cartId).then(carDetail =>{
-        console.log(carDetail)
-        removeCartItem(carDetail.cartDetailId);
-        refreshCart(cartId);
-        showToast("¡Pedido creado correctamente!", "success");
-      })
+      await checkoutCart(cartId)
+      refreshCart(cartId);
+      showToast("¡Pedido creado correctamente!", "success");
     } catch (err: any) {
-       showToast(err.message || "No se pudo completar la compra", "danger");
+      showToast(err.message || "No se pudo completar la compra", "danger");
     }
   };
 
@@ -196,19 +200,9 @@ export default function App() {
 
   const getClientCart = (clientId: number) => {
     if (!authUser || authUser.role !== "client") return;
-    getCartByClientId(clientId)
-      .then(cartResp => {
-        if (cartResp && cartResp.cartId) {
-          refreshCart(cartResp.cartId);
-          setCartId(cartResp.cartId);
-        } else {
-          setCart([]);
-        }
-      })
-      .catch(err => {
-        console.error("Error al obtener el carrito del cliente:", err);
-        setCart([]);
-      });
+    getCartByClient(Number(authUser.id))
+      .then(cart => setCartId(cart.cartId))
+      .catch(() => setCartId(null));
   }
 
   if (checkingSession) {
@@ -229,7 +223,13 @@ export default function App() {
     if (currentView === "carrito") return <CarritoPage {...publicProps} cart={cart} onUpdateQty={handleUpdateQty} onRemove={handleRemove} onCheckout={handleCheckout} />;
     if (currentView === "registro") return <RegistroScreen onNavigate={setCurrentView} onCompleteRegister={handleRegisterSuccess} />;
     if (currentView === "login") return <LoginScreen onNavigate={setCurrentView} onLoginSuccess={handleLoginSuccess} />;
+    if (currentView === "mis-pedidos") return userRole === "client"
+      ? <MisPedidosPage {...publicProps} clientId={Number(authUser?.id)} />
+      : <LoginScreen onNavigate={setCurrentView} onLoginSuccess={handleLoginSuccess} />;
 
+    if (currentView === "mi-perfil") return userRole === "client"
+      ? <MiPerfilPage {...publicProps} clientId={Number(authUser?.id)} />
+      : <LoginScreen onNavigate={setCurrentView} onLoginSuccess={handleLoginSuccess} />;
 
     return (
       <div className="w-full h-screen flex overflow-hidden bg-gray-50">

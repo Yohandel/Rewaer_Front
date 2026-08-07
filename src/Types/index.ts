@@ -5,7 +5,7 @@ export type Page =
   | "empleados" | "propietarios" | "roles" | "inventario" | "permisos"
   | "tienda" | "registro" | "login"
   | "catalogo" | "ofertas" | "contacto"
-  | "detalle" | "carrito";
+  | "detalle" | "carrito" | "mis-pedidos" | "mi-perfil";
 
 export type Product = {
   name: string;
@@ -140,7 +140,7 @@ export type ClientApi = {
 
 // ── Pedidos / Ventas ──
 export type Order = {
-  idPedido: number;
+  pedidoId: number;
   idCliente: number;
   fecha: string;
   total: number;
@@ -178,3 +178,5 @@ export type DashboardData = {
   pedidosCompletados: number;
   articulosSinStock: number;
 };
+
+export type CartDto = { cartId: number; clientId: number; createdAt: string };

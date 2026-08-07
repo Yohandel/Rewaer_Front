@@ -105,7 +105,7 @@ export function RegistroScreen({ onNavigate, onCompleteRegister }: {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Dirección</label>
-            <input value={form.direccion} onChange={e => set("direccion", e.target.value)}
+            <input type='text' name='address' value={form.direccion} onChange={e => set("direccion", e.target.value)}
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-gray-50 outline-none text-slate-900" placeholder="Tu dirección" />
             {errors.direccion && <p className="text-xs text-red-500 mt-1">{errors.direccion}</p>}
           </div>

@@ -1,6 +1,9 @@
 import { apiRequest } from './httpClient';
-import { CartItemApi, AddCartItemPayload, UpdateCartItemPayload } from '../Types';
-import { CartByClientResponse } from '../interfaces/ICartResponse';
+import { CartItemApi, AddCartItemPayload, UpdateCartItemPayload, CartDto, Order } from '../Types';
+
+export function getCartByClient(clientId: number) {
+  return apiRequest<CartDto>(`/api/Cart/client/${clientId}`);
+}
 
 export function addCartItem(payload: AddCartItemPayload) {
   return apiRequest<{ message: string }>('/api/Cart/items', { method: 'POST', body: payload });
@@ -8,10 +11,6 @@ export function addCartItem(payload: AddCartItemPayload) {
 
 export function getCart(cartId: number) {
   return apiRequest<CartItemApi[]>(`/api/Cart/${cartId}`);
-}
-
-export function getCartByClientId(clientId: number) {
-  return apiRequest<CartByClientResponse>(`/api/Cart/client/${clientId}`);
 }
 
 export function updateCartItemQuantity(payload: UpdateCartItemPayload) {
@@ -23,5 +22,6 @@ export function removeCartItem(cartDetailId: number) {
 }
 
 export function checkoutCart(cartId: number) {
-  return apiRequest<CartItemApi>('/api/Cart/checkout', { method: 'POST', body: { cartId } });
+  return apiRequest<{ message: string }>('/api/Cart/checkout', { method: 'POST', body: { cartId } });
 }
+

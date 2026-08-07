@@ -9,7 +9,7 @@ import { getCategories } from '../../services/categoryService';
 import { Toast } from '../Common/Toast';
 import { getowners } from '../../services/ownerService';
 
-const EMPTY_PRODUCT: ProductForm = { name: "", categoryId: 0, price: "", physicalState: "Buen estado", ownerId: 2, description: "", owner: "" };
+const EMPTY_PRODUCT: ProductForm = { name: "", categoryId: 0, price: "", physicalState: "", ownerId: 0, description: "", owner: "" };
 
 export function NuevoProductoModal({ onClose, onSave, initialData, editMode = false }: {
   onClose: () => void; onSave: (p: ProductForm, id?: number) => void;
@@ -19,7 +19,6 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
   const [errors, setErrors] = useState<Partial<ProductForm>>({});
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [owners, setowners] = useState<owner[]>([]);
-  const [loadError, setLoadError] = useState("");
   const set = (k: keyof ProductForm, v: string | boolean) => setForm(f => ({ ...f, [k]: v }));
   const [toast, setToast] = useState<{ msg: string; variant: "success" | "danger" } | null>(null);
   const showToast = (msg: string, variant: "success" | "danger" = "success") => {
@@ -51,7 +50,7 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
       .catch(() => showToast("Error al cargar las categorías", "danger"));
     getowners()
       .then(setowners)
-      .catch(err => setLoadError(err.message || "No se pudieron cargar los propietarios"))
+      .catch(err => showToast(err.message || "No se pudieron cargar los propietarios", "danger"))
   }
 
   const handleImageChange = (
@@ -88,7 +87,10 @@ export function NuevoProductoModal({ onClose, onSave, initialData, editMode = fa
 
           <Field label="Condición" required>
             <select className={selectCls} value={form.physicalState} onChange={e => set("physicalState", e.target.value)}>
-              {["Nuevo", "Como nuevo", "Excelente", "Bueno", "Buen estado", "Aceptable", "Usado"].map(s => <option key={s}>{s}</option>)}
+              <option value="">Seleccionar…</option>
+              {["Nuevo", "Como nuevo", "Excelente",
+                "Bueno", "Buen estado", "Aceptable", "Usado"]
+                .map(s => <option key={s}>{s}</option>)}
             </select>
           </Field>
 
