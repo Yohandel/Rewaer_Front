@@ -6,6 +6,8 @@ import { Toast } from '../Common/Toast';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { StatusBadge } from '../Common/StatusBadge';
 import { OrderDetailsModal } from './OrderDetailsModal';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../Common/Pagination';
 
 const STATUS_FILTERS = ["Todos", "Pendiente", "Facturado", "Entregado", "Cancelado"];
 
@@ -36,7 +38,7 @@ export function VentasPage() {
     if (!confirmAction) return;
     const { order, type } = confirmAction;
     try {
-      if (type === "cancel")  { await cancelOrder(order.pedidoId);  showToast(`Pedido #${order.pedidoId} cancelado`, "danger"); }
+      if (type === "cancel") { await cancelOrder(order.pedidoId); showToast(`Pedido #${order.pedidoId} cancelado`, "danger"); }
       if (type === "invoice") { await invoiceOrder(order.pedidoId); showToast(`Pedido #${order.pedidoId} facturado`); }
       if (type === "deliver") { await deliverOrder(order.pedidoId); showToast(`Pedido #${order.pedidoId} entregado`); }
       setConfirmAction(null);
@@ -48,10 +50,12 @@ export function VentasPage() {
   };
 
   const confirmCopy: Record<string, { title: string; message: string; label: string; danger?: boolean }> = {
-    cancel:  { title: "¿Cancelar pedido?",  message: "Esta acción cancelará el pedido seleccionado.", label: "Sí, cancelar", danger: true },
-    invoice: { title: "¿Facturar pedido?",  message: "Se marcará el pedido como facturado.",           label: "Sí, facturar" },
-    deliver: { title: "¿Marcar como entregado?", message: "Se marcará el pedido como entregado.",       label: "Sí, entregar" },
+    cancel: { title: "¿Cancelar pedido?", message: "Esta acción cancelará el pedido seleccionado.", label: "Sí, cancelar", danger: true },
+    invoice: { title: "¿Facturar pedido?", message: "Se marcará el pedido como facturado.", label: "Sí, facturar" },
+    deliver: { title: "¿Marcar como entregado?", message: "Se marcará el pedido como entregado.", label: "Sí, entregar" },
   };
+
+  const { page, setPage, totalPages, pageItems } = usePagination(orders, 6);
 
   return (
     <div className="flex flex-col h-full">
@@ -105,12 +109,18 @@ export function VentasPage() {
                     <div className="flex items-center justify-end gap-1">
                       <button type="button" onClick={() => setDetailTarget(o)} title="Ver detalle"
                         className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><Eye size={14} className="text-gray-500" /></button>
-                      <button type="button" onClick={() => setConfirmAction({ order: o, type: "invoice" })} title="Facturar"
-                        className="p-1.5 hover:bg-blue-50 rounded-lg cursor-pointer"><FileCheck size={14} className="text-blue-500" /></button>
-                      <button type="button" onClick={() => setConfirmAction({ order: o, type: "deliver" })} title="Marcar entregado"
-                        className="p-1.5 hover:bg-green-50 rounded-lg cursor-pointer"><Truck size={14} className="text-green-600" /></button>
-                      <button type="button" onClick={() => setConfirmAction({ order: o, type: "cancel" })} title="Cancelar"
-                        className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"><XCircle size={14} className="text-red-500" /></button>
+                      {(o.estado !== "Cancelado" && o.estado !== "Entregado" && o.estado !== "Facturado") && (
+                        <button type="button" onClick={() => setConfirmAction({ order: o, type: "invoice" })} title="Facturar"
+                          className="p-1.5 hover:bg-blue-50 rounded-lg cursor-pointer"><FileCheck size={14} className="text-blue-500" /></button>
+                      )}
+                      {o.estado === "Facturado" && (
+                        <button type="button" onClick={() => setConfirmAction({ order: o, type: "deliver" })} title="Marcar entregado"
+                          className="p-1.5 hover:bg-green-50 rounded-lg cursor-pointer"><Truck size={14} className="text-green-600" /></button>
+                      )}
+                      {(o.estado !== "Cancelado" && o.estado !== "Facturado" && o.estado !== "Entregado") && (
+                        <button type="button" onClick={() => setConfirmAction({ order: o, type: "cancel" })} title="Cancelar"
+                          className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"><XCircle size={14} className="text-red-500" /></button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -119,6 +129,7 @@ export function VentasPage() {
           </table>
           {!loading && orders.length === 0 && <div className="py-12 text-center text-gray-400 text-sm">No hay pedidos para este filtro.</div>}
           {loading && <div className="py-12 text-center text-gray-400 text-sm">Cargando…</div>}
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
         </div>
       </div>
     </div>

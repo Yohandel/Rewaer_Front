@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Order, OrderDetailItem } from '../../Types';
 import { getOrderDetails } from '../../services/orderService';
-import { Modal } from '../common/Modal';
+import { Modal } from '../Common/Modal';
 
 export function OrderDetailsModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const [items, setItems] = useState<OrderDetailItem[]>([]);
@@ -9,14 +9,14 @@ export function OrderDetailsModal({ order, onClose }: { order: Order; onClose: (
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getOrderDetails(order.idPedido)
+    getOrderDetails(order.pedidoId)
       .then(setItems)
       .catch(err => setError(err.message || "No se pudo cargar el detalle"))
       .finally(() => setLoading(false));
-  }, [order.idPedido]);
+  }, [order.pedidoId]);
 
   return (
-    <Modal title={`Pedido #${order.idPedido}`} onClose={onClose}>
+    <Modal title={`Pedido #${order.pedidoId}`} onClose={onClose}>
       <div className="mb-4 flex items-center justify-between text-sm">
         <div>
           <p className="font-semibold text-gray-800">{order.cliente}</p>

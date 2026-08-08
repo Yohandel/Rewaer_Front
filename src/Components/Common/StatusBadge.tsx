@@ -10,6 +10,9 @@ export function StatusBadge({ status }: { status: string }) {
     Excelente: "bg-green-100 text-green-700",  Bueno: "bg-teal-100 text-teal-700",
     Aceptable: "bg-yellow-100 text-yellow-700","Como nuevo": "bg-blue-100 text-blue-700",
     Oferta: "bg-red-500 text-white",
+    Entregado:"bg-green-100 text-green-700",
+    Facturado:"bg-blue-100 text-blue-700",
+    Cancelado:"bg-red-100 text-red-700"
   };
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${map[status] ?? "bg-gray-100 text-gray-600"}`}>{status}</span>;
 }

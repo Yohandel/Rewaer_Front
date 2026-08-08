@@ -8,6 +8,8 @@ import { StatusBadge } from '../Common/StatusBadge';
 import { NuevoProductoModal } from './NuevoProductoModal';
 import { createProduct, createProductWithImage, getProducts, inactivateArticle, uploadProductImage } from '../../services/productService';
 import { ProductResponse } from '../../interfaces/IProduct';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../Common/Pagination';
 
 export function ProductosPage() {
   const [products, setProducts] = useState<ProductResponse[]>([]);
@@ -16,13 +18,18 @@ export function ProductosPage() {
   const [toast, setToast] = useState<{ msg: string; variant: "success" | "danger" } | null>(null);
   const [search, setSearch] = useState("");
 
-  const filtered = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) || p.categoryName?.toLowerCase().includes(search.toLowerCase()) || p.physicalState?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = products.filter(p => p.name?.toLowerCase().includes(search.toLowerCase()) 
+  || p.categoryName?.toLowerCase().includes(search.toLowerCase()) 
+  || p.physicalState?.toLowerCase().includes(search.toLowerCase()));
 
-
-  const showToast = (msg: string, variant: "success" | "danger" = "success") => {
-    setToast({ msg, variant });
-    setTimeout(() => setToast(null), 3500);
+  const showToast = (msg: string, variant: "success" | "danger" = "success") => 
+    {setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
   };
+
+   useEffect(() => {
+    fetchProducts();
+  }, []);
+
 
   const handleSave = (form: ProductForm, id?: number) => {
     if (id !== undefined) {
@@ -48,10 +55,6 @@ export function ProductosPage() {
       .catch(() => showToast("Error al cargar los productos", "danger"));
   }
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const handleDelete = () => {
     if (!deleteTarget) return;
      inactivateArticle(deleteTarget.id).then(async createdProduct => {
@@ -65,6 +68,8 @@ export function ProductosPage() {
     name: product.name, categoryId: product.categoryId, price: String(product.price), physicalState: product.physicalState, ownerId: product.ownerId,
     description: product.description, owner: product.owner
   });
+  
+  const { page, setPage, totalPages, pageItems } = usePagination(filtered, 8);
 
   return (
     <div className="p-6 overflow-auto h-full relative">
@@ -111,7 +116,7 @@ export function ProductosPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-gray-700">
-            {filtered.map(product => (
+            {pageItems.map(product => (
               <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-semibold text-gray-900">{product.name}</td>
                 <td className="px-4 py-3 text-xs text-gray-500">{product.categoryName}</td>
@@ -133,6 +138,7 @@ export function ProductosPage() {
             {search ? `No se encontraron productos para "${search}".` : "No hay productos. ¡Crea el primero!"}
           </div>
         )}
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} />
       </div>
     </div>
   );

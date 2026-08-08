@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { InventoryDto } from '../../Types';
 import { InventoryItem } from '../../services/inventoryService';
-import { Modal } from '../common/Modal';
-import { Field } from '../common/Field';
+import { Modal } from '../Common/Modal';
+import { Field } from '../Common/Field';
 import { inputCls, selectCls } from '../../styles/formStyles';
 import { ProductResponse } from '../../interfaces/IProduct';
 
@@ -15,8 +15,8 @@ export function InventoryModal({ onClose, onSave, products, initialData, editMod
   editMode?: boolean;
 }) {
   const [form, setForm] = useState<InventoryDto>({
-    id_articulo: initialData?.articuloId ?? products[0]?.id ?? 0,
-    cantidad: initialData?.cantidad ?? 1,
+    id_articulo: initialData?.articuloId ??  0,
+    cantidad: initialData?.cantidad ?? 0,
     ubicacion_almacen: initialData?.ubicacion ?? "",
   });
   const [error, setError] = useState("");
@@ -39,7 +39,8 @@ export function InventoryModal({ onClose, onSave, products, initialData, editMod
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg p-2.5">{error}</p>}
         <Field label="Artículo" required>
-          <select className={selectCls} value={form.id_articulo} onChange={e => set("id_articulo", Number(e.target.value))} disabled={editMode}>
+          <select defaultValue={0} className={selectCls} value={form.id_articulo} onChange={e => set("id_articulo", Number(e.target.value))} disabled={editMode}>
+            <option value={0} >Seleccionar…</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </Field>

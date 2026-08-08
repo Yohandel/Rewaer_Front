@@ -90,12 +90,12 @@ export type Employee = {
   direccion?: string;
   estado: string;   // estado_laboral
   rolId?: number;
-  rol?:string
+  rol?: string
 };
 
 export type EmployeeCreateDto = {
   nombre: string; apellido: string; email: string; telefono: string;
-  contrasena: string; fecha_ingreso: string; estado_laboral: string;
+  contrasena: string; estado_laboral: string;
   id_rol: number; direccion: string;
 };
 

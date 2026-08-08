@@ -6,6 +6,8 @@ import { Toast } from '../Common/Toast';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 import { StatusBadge } from '../Common/StatusBadge';
 import { OwnerModal } from './ownerModal';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../Common/Pagination';
 
 export function OwnersPage() {
   const [owners, setowners] = useState<owner[]>([]);
@@ -68,6 +70,8 @@ export function OwnersPage() {
     }
   };
 
+  const { page, setPage, totalPages, pageItems } = usePagination(filtered, 8);
+
   return (
     <div className="p-6 overflow-auto h-full relative">
       {toast && <Toast message={toast.msg} variant={toast.variant} onClose={() => setToast(null)} />}
@@ -123,7 +127,7 @@ export function OwnersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-gray-700">
-            {filtered.map(o => (
+            {pageItems.map(o => (
               <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-semibold text-gray-900">{o.nombre} {o.apellido}</td>
                 <td className="px-4 py-3 text-xs text-gray-500">{o.email}</td>
@@ -142,6 +146,7 @@ export function OwnersPage() {
         </table>
         {!loading && filtered.length === 0 && <div className="py-12 text-center text-gray-400 text-sm">No hay proveedor registrados.</div>}
         {loading && <div className="py-12 text-center text-gray-400 text-sm">Cargando…</div>}
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} />
       </div>
     </div>
   );
