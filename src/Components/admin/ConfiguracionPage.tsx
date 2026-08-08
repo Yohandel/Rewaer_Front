@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Search } from 'lucide-react';
-import { Employee, Role, Permission, EmployeePermissionItem } from '../../Types';
-import { getEmployees, getEmployee, updateEmployee, deactivateEmployee } from '../../services/employeeService';
+import { Settings, Search, Shield } from 'lucide-react';
+import { Employee, Role, Permission, EmployeePermissionItem, UpdateEmployeeRoleDto } from '../../Types';
+import { getEmployees, getEmployee, updateEmployee, deactivateEmployee, updateEmployeeRole, changeEmployeePassword } from '../../services/employeeService';
 import { getRoles } from '../../services/roleService';
 import { getPermissions, getEmployeePermissions, assignPermission, removePermission } from '../../services/permissionService';
 import { Toast } from '../common/Toast';
+import { ChangePasswordForm } from '../Common/ChangePasswordForm';
 
 export function ConfiguracionPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -33,7 +34,7 @@ export function ConfiguracionPage() {
 
   useEffect(() => {
     if (selectedId === null) { setSelectedDetail(null); return; }
-    getEmployee(selectedId).then(setSelectedDetail).catch(() => {});
+    getEmployee(selectedId).then(setSelectedDetail).catch(() => { });
     setPermLoading(true);
     getEmployeePermissions(selectedId)
       .then(setEmpPermissions)
@@ -41,16 +42,16 @@ export function ConfiguracionPage() {
       .finally(() => setPermLoading(false));
   }, [selectedId]);
 
-  const filteredEmployees = employees.filter(e => `${e.nombre} ${e.apellido}`.toLowerCase().includes(search.toLowerCase()));
+  const filteredEmployees = employees.filter(employee => `${employee.nombre} ${employee.apellido}`.toLowerCase().includes(search.toLowerCase()));
   const roleName = (id?: number) => roles.find(r => r.id === id)?.nombre ?? "—";
 
   const changeRole = async (idRol: number) => {
     if (!selectedDetail) return;
     try {
-      await updateEmployee(selectedDetail.id, {
-        nombre: selectedDetail.nombre, apellido: selectedDetail.apellido, email: selectedDetail.email,
-        telefono: selectedDetail.telefono ?? "", direccion: selectedDetail.direccion ?? "", id_rol: idRol,
-      });
+      const data: UpdateEmployeeRoleDto = {
+        RoleId: idRol
+      }
+      await updateEmployeeRole(selectedId, data);
       setSelectedDetail({ ...selectedDetail, rolId: idRol });
       loadEmployees();
       showToast("Rol actualizado exitosamente");
@@ -79,13 +80,13 @@ export function ConfiguracionPage() {
     if (!selectedDetail) return;
     try {
       if (active) {
-        await removePermission({ id_empleado: selectedDetail.id, id_permiso: permId }).then(res=>{
-          showToast( "Permiso Removido", "success");
+        await removePermission({ id_empleado: selectedDetail.id, id_permiso: permId }).then(res => {
+          showToast("Permiso Removido", "success");
         });
         setEmpPermissions(prev => prev.filter(p => p.idPermiso !== permId));
       } else {
         await assignPermission({ id_empleado: selectedDetail.id, id_permiso: permId }).then(res => {
-          showToast( "Permiso Asignado", "success");
+          showToast("Permiso Asignado", "success");
         });
         const perm = allPermissions.find(p => p.id === permId);
         if (perm) setEmpPermissions(prev => [...prev, { idPermiso: perm.id, nombre: perm.nombre, descripcion: perm.descripcion }]);
@@ -114,18 +115,18 @@ export function ConfiguracionPage() {
           </div>
           <div className="flex-1 overflow-auto divide-y divide-gray-100">
             {loading && <p className="text-center text-xs text-gray-400 py-6">Cargando…</p>}
-            {filteredEmployees.map(e => (
-              <button key={e.id} type="button" onClick={() => setSelectedId(e.id)}
-                className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${selectedId === e.id ? "bg-blue-50 border-l-2 border-blue-600" : ""}`}>
+            {filteredEmployees.map(employee => (
+              <button key={employee.id} type="button" onClick={() => setSelectedId(employee.id)}
+                className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${selectedId === employee.id ? "bg-blue-50 border-l-2 border-blue-600" : ""}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${selectedId === e.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
-                    {e.nombre[0]}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${selectedId === employee.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"}`}>
+                    {employee.nombre[0]}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{e.nombre} {e.apellido}</p>
+                    <p className="text-sm font-medium text-gray-800 truncate">{employee.nombre} {employee.apellido}</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-purple-100 text-purple-700">{roleName(e.rolId)}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${e.estado === "Activo" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>{e.estado}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-purple-100 text-purple-700">{roleName(employee.rolId)}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${employee.estado === "Activo" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>{employee.estado}</span>
                     </div>
                   </div>
                 </div>
@@ -155,7 +156,7 @@ export function ConfiguracionPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Rol</label>
-                    <select value={selectedDetail.rolId ?? ""} onChange={e => changeRole(Number(e.target.value))}
+                    <select value={selectedDetail.rolId ?? ""} onChange={employee => changeRole(Number(employee.target.value))}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                       {roles.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
                     </select>
@@ -193,6 +194,13 @@ export function ConfiguracionPage() {
                   })}
                   {allPermissions.length === 0 && <p className="text-xs text-gray-400">No hay permisos configurados.</p>}
                 </div>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Shield size={16} className="text-gray-500" />
+                  <h3 className="text-sm font-bold text-gray-800">Cambiar contraseña</h3>
+                </div>
+                <ChangePasswordForm onSubmit={(newPassword) => changeEmployeePassword(selectedDetail.id, newPassword).then(() => { })} />
               </div>
             </div>
           )}

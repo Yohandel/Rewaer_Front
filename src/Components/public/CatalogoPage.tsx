@@ -12,7 +12,8 @@ export function CatalogoPage({ onNavigate, userRole, onLogout, onSelectProduct, 
 }) {
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(false);
-  const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.categoryName.toLowerCase().includes(search.toLowerCase()));
+  const activedProducts = products.filter(p => p.estado === "Activo" && p.stock > 0);
+  const filtered = activedProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.categoryName.toLowerCase().includes(search.toLowerCase()));
   const handleRequireAuth = () => { setToast(true); onNavigate("login"); };
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">

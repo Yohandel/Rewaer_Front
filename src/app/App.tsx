@@ -5,6 +5,7 @@ import { getStoredAuth, setStoredAuth, clearStoredAuth } from '../utils/authStor
 import { getProducts } from '../services/productService';
 import { addCartItem, getCart, updateCartItemQuantity, removeCartItem, checkoutCart, getCartByClient } from '../services/cartService';
 import { adaptCartItem } from '../utils/adapters';
+import { ApiError } from '../services/httpClient';
 
 import { Sidebar } from '../Components/admin/Sidebar';
 import { DashboardPage } from '../Components/admin/DashboardPage';
@@ -21,7 +22,6 @@ import { AccessDenied } from '../Components/Common/AccessDenied';
 
 import { TiendaPublicaPage } from '../Components/public/TiendaPublicaPage';
 import { CatalogoPage } from '../Components/public/CatalogoPage';
-import { OfertasPage } from '../Components/public/OfertasPage';
 import { ContactoPage } from '../Components/public/ContactoPage';
 import { DetalleProductoPage } from '../Components/public/DetalleProductoPage';
 import { CarritoPage } from '../Components/public/CarritoPage';
@@ -33,9 +33,29 @@ import { ProductResponse } from '../interfaces/IProduct';
 import { getMyPermissionNames } from '../services/permissionService';
 import { PermissionsPage } from '../Components/admin/PermissionsPage';
 import { PERMISSION_KEYS, hasPermission } from '../utils/permissions';
-import { Toast } from '../Components/Common/Toast';
 import { MisPedidosPage } from '../Components/public/MisPedidosPage';
 import { MiPerfilPage } from '../Components/public/MiPerfilPage';
+import { Toast } from '../Components/common/Toast';
+import { PerfilPage } from '../Components/admin/PerfilPage';
+
+// Arma un AuthUser enriquecido (roleName + permisos si es empleado) a partir del guardado/base.
+// Lanza el error tal cual para que el caller decida qué hacer con él (401 vs error transitorio).
+async function enrichAuthUser(base: AuthUser): Promise<AuthUser> {
+  const me = await getMe(); // si falla, se propaga (401, red, CORS, etc.)
+  let user: AuthUser = { ...base, id: me.id, nombre: me.name, email: me.email, roleName: me.role };
+
+  if (user.role === "admin") {
+    try {
+      const permNames = await getMyPermissionNames(Number(user.id));
+      user = { ...user, permissions: permNames };
+    } catch {
+      // Falla al traer permisos no debe invalidar la sesión, solo se queda sin permisos extra por ahora
+      user = { ...user, permissions: user.permissions ?? [] };
+    }
+  }
+
+  return user;
+}
 
 export default function App() {
   const [currentView, setCurrentView] = useState<Page>("tienda");
@@ -48,7 +68,7 @@ export default function App() {
   const [productsError, setProductsError] = useState<string | null>(null);
   const [cartId, setCartId] = useState<number | null>(null);
 
-  const isAdmin = authUser?.roleName?.includes('Admin');
+  const isAdmin = Boolean(authUser?.roleName?.includes('Admin'));
   const permissions = authUser?.permissions ?? [];
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const selectedProduct = products.find(p => p.id === selectedProductId) ?? null;
@@ -58,47 +78,65 @@ export default function App() {
     setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
   };
 
-  useEffect(() => {
-    if (authUser?.role === "client") {
-      getClientCart(authUser?.id as number);
-    }
-    else {
-      setCartId(null);
-    }
-  }, [authUser]);
-
+  // Catálogo público — independiente de la sesión
   useEffect(() => {
     getProducts().then(setProducts).catch(err => setProductsError(err.message || "No se pudo cargar el catálogo"));
   }, []);
 
-
+  // ── ARRANQUE DE SESIÓN: una sola secuencia async, sin condiciones de carrera ──
   useEffect(() => {
-    const stored = getStoredAuth();
-    if (!stored) { setCheckingSession(false); return; }
+    let cancelled = false;
 
-    setAuthUser(stored);
-    setUserRole(stored.role);
+    async function bootstrapSession() {
+      const stored = getStoredAuth();
+      if (!stored) { if (!cancelled) setCheckingSession(false); return; }
 
-    getMe()
-      .then(async me => {
-        let refreshed: AuthUser = { ...stored, id: me.id, nombre: me.name, email: me.email, roleName: me.role };
-        if (refreshed.role === "admin") {
-          try {
-            const permNames = await getMyPermissionNames(Number(refreshed.id));
-            refreshed = { ...refreshed, permissions: permNames };
-          } catch { /* ignorar */ }
-        }
+      // Mostramos optimistamente lo guardado mientras se valida contra el backend
+      if (!cancelled) {
+        setAuthUser(stored);
+        setUserRole(stored.role);
+      }
+
+      try {
+        const refreshed = await enrichAuthUser(stored);
+        if (cancelled) return;
         setAuthUser(refreshed);
         setStoredAuth(refreshed);
-      })
-      .catch(() => {
-        clearStoredAuth();
-        setAuthUser(null);
-        setUserRole(null);
-        setCurrentView("tienda");
-      })
-      .finally(() => setCheckingSession(false));
+      } catch (err) {
+        // CLAVE: solo cerramos sesión si el backend confirmó que el token es inválido/vencido (401).
+        // Cualquier otro error (red, CORS momentáneo, servidor lento al arrancar) NO debe desloguear:
+        // conservamos la sesión guardada y seguimos con lo que ya teníamos en localStorage.
+        const isAuthError = err instanceof ApiError && err.status === 401;
+        if (isAuthError) {
+          clearStoredAuth();
+          if (!cancelled) {
+            setAuthUser(null);
+            setUserRole(null);
+            setCurrentView("tienda");
+          }
+        } else {
+          console.warn("No se pudo validar la sesión contra el servidor (se mantiene la sesión guardada):", err);
+          // authUser/userRole ya quedaron seteados de forma optimista arriba; no se tocan.
+        }
+      } finally {
+        if (!cancelled) setCheckingSession(false);
+      }
+    }
+
+    bootstrapSession();
+    return () => { cancelled = true; };
   }, []);
+
+  // Cargar el carrito del cliente cuando cambia authUser
+  useEffect(() => {
+    if (authUser?.role === "client") {
+      getCartByClient(Number(authUser.id))
+        .then(cart => setCartId(cart.cartId))
+        .catch(() => setCartId(null));
+    } else {
+      setCartId(null);
+    }
+  }, [authUser]);
 
   const refreshCart = useCallback(async (id: number) => {
     try {
@@ -147,7 +185,7 @@ export default function App() {
   const handleCheckout = async () => {
     if (!cartId) return;
     try {
-      await checkoutCart(cartId)
+      await checkoutCart(cartId);
       refreshCart(cartId);
       showToast("¡Pedido creado correctamente!", "success");
     } catch (err: any) {
@@ -171,15 +209,10 @@ export default function App() {
     let finalUser = baseUser;
     if (mode === "employee") {
       try {
-        const me = await getMe();
-        finalUser = { ...baseUser, roleName: me.role };
-      } catch { /* si /me falla, se trata como no-admin */ }
-
-      try {
-        const permNames = await getMyPermissionNames(Number(finalUser.id));
-        finalUser = { ...finalUser, permissions: permNames };
-      } catch { /* si falla, sin permisos asignados */ }
-
+        finalUser = await enrichAuthUser(baseUser);
+      } catch {
+        // Si /me falla justo tras el login, igual dejamos entrar con lo que devolvió el login
+      }
       setStoredAuth(finalUser);
     }
 
@@ -193,17 +226,11 @@ export default function App() {
   const handleLogout = () => {
     setUserRole(null);
     setAuthUser(null);
+    setCartId(null);
     clearStoredAuth();
     setCart([]);
-    setCurrentView("tienda");
+    setCurrentView("login");
   };
-
-  const getClientCart = (clientId: number) => {
-    if (!authUser || authUser.role !== "client") return;
-    getCartByClient(Number(authUser.id))
-      .then(cart => setCartId(cart.cartId))
-      .catch(() => setCartId(null));
-  }
 
   if (checkingSession) {
     return (
@@ -233,7 +260,7 @@ export default function App() {
 
     return (
       <div className="w-full h-screen flex overflow-hidden bg-gray-50">
-        <Sidebar current={currentView} onNavigate={setCurrentView} onLogout={handleLogout} isAdmin={isAdmin} permissions={permissions} />
+        <Sidebar current={currentView} onNavigate={setCurrentView} onLogout={handleLogout} isAdmin={isAdmin} permissions={permissions} authUser={authUser} />
         <div className="flex-1 bg-gray-50 overflow-hidden flex flex-col">
           {productsError && (
             <div className="m-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs">{productsError}</div>
@@ -243,6 +270,7 @@ export default function App() {
           {currentView === "inventario" && (isAdmin || hasPermission(permissions, PERMISSION_KEYS.INVENTARIO) ? <InventoryPage /> : <AccessDenied />)}
           {currentView === "ventas" && <VentasPage />}
           {currentView === "usuarios" && (isAdmin ? <UsuariosPage /> : <AccessDenied />)}
+          {currentView === "perfil"        && authUser && <PerfilPage authUser={authUser} />}
           {currentView === "empleados" && (isAdmin ? <EmployeesPage /> : <AccessDenied />)}
           {currentView === "propietarios" && (isAdmin || hasPermission(permissions, PERMISSION_KEYS.PROPIETARIOS) ? <OwnersPage /> : <AccessDenied />)}
           {currentView === "categorias" && (isAdmin || hasPermission(permissions, PERMISSION_KEYS.CATEGORIAS) ? <CategoriasPage /> : <AccessDenied />)}

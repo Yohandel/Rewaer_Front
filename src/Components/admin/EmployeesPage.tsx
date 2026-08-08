@@ -34,7 +34,7 @@ export function EmployeesPage() {
   const load = () => {
     setLoading(true);
     getEmployees()
-      .then(setEmployees)
+      .then(employees => setEmployees(employees.filter(employee => employee.estado === "Activo")))
       .catch(err => setLoadError(err.message || "No se pudieron cargar los empleados"))
       .finally(() => setLoading(false));
   };

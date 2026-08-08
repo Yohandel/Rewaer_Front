@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, Plus, Shield, Edit2, Trash2 } from 'lucide-react';
 import { Role, RoleDto } from '../../Types';
 import { getRoles, createRole, updateRole, deactivateRole } from '../../services/roleService';
-import { Toast } from '../common/Toast';
+import { Toast } from '../Common/Toast';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { RoleModal } from './RoleModal';
 import { Pagination } from '../Common/Pagination';
@@ -23,7 +23,8 @@ export function RolesPage() {
 
   const load = () => {
     setLoading(true);
-    getRoles().then(setRoles).catch(err => setLoadError(err.message || "No se pudieron cargar los roles")).finally(() => setLoading(false));
+    getRoles().then(roles=>{setRoles(roles.filter(rol => rol.estado === "Activo" ))})
+    .catch(err => setLoadError(err.message || "No se pudieron cargar los roles")).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
@@ -98,7 +99,7 @@ export function RolesPage() {
                   </td>
                   <td className="px-6 py-3 text-xs text-gray-500">{r.descripcion}</td>
                   <td className="px-6 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-1  group-hover:opacity-100 transition-opacity">
                       <button type="button" onClick={() => setModal({ mode: "edit", target: r })} className="p-1.5 hover:bg-blue-50 rounded-lg cursor-pointer"><Edit2 size={13} className="text-blue-500" /></button>
                       <button type="button" onClick={() => setDeleteTarget(r)} className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"><Trash2 size={13} className="text-red-500" /></button>
                     </div>
