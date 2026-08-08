@@ -1,5 +1,5 @@
 import { apiRequest } from './httpClient';
-import { Employee, EmployeeCreateDto, EmployeeUpdateDto } from '../Types';
+import { ChangePasswordDto, Employee, EmployeeCreateDto, EmployeeUpdateDto, UpdateEmployeeRoleDto } from '../Types';
 
 export function getEmployees() {
   return apiRequest<Employee[]>('/api/Employee');
@@ -19,4 +19,15 @@ export function updateEmployee(id: number, dto: EmployeeUpdateDto) {
 
 export function deactivateEmployee(id: number) {
   return apiRequest<void>(`/api/Employee/${id}`, { method: 'DELETE' });
+}
+
+export function updateEmployeeRole(id: number | null, dto: UpdateEmployeeRoleDto) {
+  return apiRequest<void>(`/api/Employee/${id}/role`, { method: 'PUT', body: dto });
+}
+
+export function changeEmployeePassword(id: number, newPassword: string) {
+  return apiRequest<{ message: string }>(`/api/Employee/${id}/password`, {
+    method: 'PUT',
+    body: { newPassword } as ChangePasswordDto,
+  });
 }

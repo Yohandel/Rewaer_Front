@@ -1,25 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Employee, EmployeeCreateDto, EmployeeUpdateDto } from '../../Types';
+import { Employee, EmployeeCreateDto, EmployeeUpdateDto, Role } from '../../Types';
 import { Modal } from '../Common/Modal';
 import { Field } from '../Common/Field';
 import { inputCls, selectCls } from '../../styles/formStyles';
-
-// Ajusta estos IDs si tu tabla de roles usa otros valores
-const ROLE_OPTIONS = [
-  { id: 1, label: "Admin" },
-  { id: 2, label: "Vendedor" },
-  { id: 3, label: "Soporte" },
-];
+import { getRoles } from '../../services/roleService';
 
 type FormState = {
   nombre: string; apellido: string; email: string; telefono: string; direccion: string;
   contrasena: string; fecha_ingreso: string; estado_laboral: string; id_rol: number;
 };
-
 const EMPTY: FormState = {
   nombre: "", apellido: "", email: "", telefono: "", direccion: "",
-  contrasena: "", fecha_ingreso: new Date().toISOString().slice(0, 10), estado_laboral: "Activo", id_rol: 2,
+  contrasena: "", fecha_ingreso: new Date().toISOString().slice(0, 10), estado_laboral: "Activo", id_rol: 0,
 };
 
 export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMode = false }: {
@@ -29,14 +22,16 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
   initialData?: Employee;
   editMode?: boolean;
 }) {
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const [roles, setroles] = useState<Role[]>([])
+
   const [form, setForm] = useState<FormState>(
     editMode && initialData
       ? { ...EMPTY, nombre: initialData.nombre, apellido: initialData.apellido, email: initialData.email, telefono: initialData.telefono ?? "", direccion: initialData.direccion ?? "", id_rol: initialData.rolId ?? 2 }
       : EMPTY
   );
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [apiError, setApiError] = useState("");
 
   const set = (k: keyof FormState, v: string | number) => setForm(f => ({ ...f, [k]: v }));
 
@@ -51,6 +46,16 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
     return Object.keys(e).length === 0;
   };
 
+  useEffect(() => {
+    fectRoles()
+  }, [])
+
+
+  const fectRoles = () => {
+    getRoles().then(roles => {
+      setroles(roles)
+    })
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError("");
@@ -92,10 +97,16 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
             {errors.apellido && <p className="text-xs text-red-500 mt-1">{errors.apellido}</p>}
           </Field>
 
-          <div className="col-span-2">
-            <Field label="Correo electrónico" required>
-              <input type="email" className={inputCls} value={form.email} onChange={e => set("email", e.target.value)} />
-              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+          <Field label="Rol" required>
+            <select className={selectCls} value={form.id_rol} onChange={e => set("id_rol", Number(e.target.value))}>
+              <option value="0">Seleccionar...</option>
+              {roles.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
+          </Field>
+
+          <div >
+            <Field label="Dirección">
+              <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
             </Field>
           </div>
 
@@ -104,15 +115,10 @@ export function EmployeeModal({ onClose, onCreate, onUpdate, initialData, editMo
             {errors.telefono && <p className="text-xs text-red-500 mt-1">{errors.telefono}</p>}
           </Field>
 
-          <Field label="Rol" required>
-            <select className={selectCls} value={form.id_rol} onChange={e => set("id_rol", Number(e.target.value))}>
-              {ROLE_OPTIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
-            </select>
-          </Field>
-
-          <div className="col-span-2">
-            <Field label="Dirección">
-              <input className={inputCls} value={form.direccion} onChange={e => set("direccion", e.target.value)} />
+          <div >
+            <Field label="Correo electrónico" required>
+              <input type="email" className={inputCls} value={form.email} onChange={e => set("email", e.target.value)} />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </Field>
           </div>
 

@@ -2,7 +2,7 @@ import { ProductResponse } from "../interfaces/IProduct";
 
 export type Page =
   | "productos" | "ventas" | "usuarios" | "dashboard" | "categorias" | "configuracion"
-  | "empleados" | "propietarios" | "roles" | "inventario" | "permisos"
+  | "empleados" | "propietarios" | "roles" | "inventario" | "permisos" | "perfil"
   | "tienda" | "registro" | "login"
   | "catalogo" | "ofertas" | "contacto"
   | "detalle" | "carrito" | "mis-pedidos" | "mi-perfil";
@@ -156,12 +156,14 @@ export type OrderDetailItem = {
 };
 
 // ── Roles ──
-export type Role = { id: number; nombre: string; descripcion: string };
+export type Role = { id: number; nombre: string; descripcion: string; estado: string };
 export type RoleDto = { nombre: string; descripcion: string };
+export type UpdateEmployeeRoleDto = { RoleId: number };
+
 
 // ── Permisos ──
-export type Permission = { id: number; nombre: string; descripcion: string };
-export type PermissionDto = { nombre_permiso: string; descripcion: string };
+export type Permission = { id: number; nombre: string; descripcion: string; estado: string };
+export type PermissionDto = { nombre_permiso: string; descripcion: string };;
 export type EmployeePermissionPayload = { id_empleado: number; id_permiso: number };
 export type EmployeePermissionItem = { idPermiso: number; nombre: string; descripcion: string };
 
@@ -180,3 +182,4 @@ export type DashboardData = {
 };
 
 export type CartDto = { cartId: number; clientId: number; createdAt: string };
+export type ChangePasswordDto = { newPassword: string };

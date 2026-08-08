@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Tag, Settings, Store, LogOut,
-  Briefcase, UserCog, Shield, Warehouse, KeyRound
+  Briefcase, UserCog, Shield, Warehouse, KeyRound, ChevronRight
 } from 'lucide-react';
-import { Page } from '../../Types';
+import { AuthUser, Page } from '../../Types';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { PERMISSION_KEYS, hasPermission } from '../../utils/permissions';
 
@@ -21,8 +21,8 @@ const navItems: { icon: any; label: string; page: Page; adminOnly?: boolean; per
   { icon: Settings,        label: "Configuración", page: "configuracion", adminOnly: true },
 ];
 
-export function Sidebar({ current, onNavigate, onLogout, isAdmin, permissions }: {
-  current: Page; onNavigate: (p: Page) => void; onLogout: () => void; isAdmin: boolean | undefined; permissions: string[];
+export function Sidebar({ current, onNavigate, onLogout, isAdmin, permissions, authUser }: {
+  current: Page; onNavigate: (p: Page) => void; onLogout: () => void; isAdmin: boolean; permissions: string[]; authUser: AuthUser | null;
 }) {
   const [confirmLogout, setConfirmLogout] = useState(false);
 
@@ -43,6 +43,8 @@ export function Sidebar({ current, onNavigate, onLogout, isAdmin, permissions }:
           onCancel={() => setConfirmLogout(false)}
         />
       )}
+
+      {/* Logo */}
       <div className="px-4 py-4 border-b border-white/10">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -51,6 +53,21 @@ export function Sidebar({ current, onNavigate, onLogout, isAdmin, permissions }:
           <span className="text-white text-xs font-bold leading-tight">ReWear Admin</span>
         </div>
       </div>
+
+      {authUser && (
+        <button type="button" onClick={() => onNavigate("perfil")}
+          className={`flex items-center gap-2.5 px-4 py-3 border-b border-white/10 hover:bg-white/5 transition-colors cursor-pointer text-left ${current === "perfil" ? "bg-white/10" : ""}`}>
+          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+            {authUser.nombre?.[0] ?? "?"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-white truncate">{authUser.nombre}</p>
+            <p className="text-[10px] text-white/40 truncate">{authUser.roleName ?? "Empleado"}</p>
+          </div>
+          <ChevronRight size={13} className="text-white/30 flex-shrink-0" />
+        </button>
+      )}
+
       <nav className="flex flex-col gap-0.5 p-3 flex-1 overflow-y-auto">
         {visibleItems.map((item, i) => {
           const Icon = item.icon;
