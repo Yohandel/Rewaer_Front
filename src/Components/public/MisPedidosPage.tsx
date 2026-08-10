@@ -28,6 +28,11 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
 
   useEffect(() => {
     if (!clientId) return;
+    fetchOrders()
+    
+  }, [clientId]);
+
+  const fetchOrders = () =>{
     getMyOrders(clientId)
       .then(data => {
         const sorted = [...data].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
@@ -35,12 +40,13 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
       })
       .catch(err => setError(err.message || "No se pudieron cargar tus pedidos"))
       .finally(() => setLoading(false));
-  }, [clientId]);
+  }
 
   const { page, setPage, totalPages, pageItems } = usePagination(orders, 8);
 
   const cancelMyOrder = (pedidoId: number) => {
     cancelOrder(pedidoId).then(res => {
+      fetchOrders()
       showToast("¡Pedido creado correctamente!", "success");
     })
 
@@ -108,7 +114,7 @@ export function MisPedidosPage({ onNavigate, userRole, onLogout, cartCount, clie
                     <td className="px-6 py-3 text-right">
                       <button type="button" onClick={() => setDetailTarget(order)}
                         className="p-1.5 hover:bg-blue-50 rounded-lg cursor-pointer inline-flex"><Eye size={14} className="text-blue-500" /></button>
-                      {(order.estado !== "Facturado" && order.estado !== "Entregado") && (
+                      {(order.estado !== "Facturado" && order.estado !== "Entregado" && order.estado !== "Cancelado" ) && (
                         <button type="button" onClick={() => { setconfirmCancel(true); setcurrentPedidoId(order.pedidoId) }} title="Cancelar"
                           className="p-1.5 hover:bg-red-50 rounded-lg cursor-pointer"><XCircle size={14} className="text-red-500" /></button>
                       )}

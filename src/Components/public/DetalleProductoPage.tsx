@@ -14,7 +14,22 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
 }) {
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState(false);
-  const [selectedProduct, setselectedProduct] = useState<ProductResponse>();
+  const [selectedProduct, setselectedProduct] = useState<ProductResponse>(
+    {
+      id: 0,
+      name: '',
+      description: '',
+      price: 0,
+      physicalState: '',
+      categoryId: 0,
+      categoryName: '',
+      stock: 0,
+      owner: '',
+      ownerId: 0,
+      imagenUrl: '',
+      estado: '',
+    }
+  );
   const isAuth = userRole === "client" || userRole === "admin";
   const requireAuth = () => { setToast(true); setTimeout(() => { onNavigate("login"); }, 1200); };
 
@@ -28,9 +43,9 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
   }
 
   useEffect(() => {
-      getProductById(product?.id).then(res => console.log(res)).catch(err => setProductsError(err.message || "No se pudo cargar el catálogo"));
-    }, []);
-  const p = product;
+    getProductById(product?.id).then(showedProduct => setselectedProduct(showedProduct)).catch(err => setProductsError(err.message || "No se pudo cargar el catálogo"));
+  }, []);
+  const p = selectedProduct;
   const handleCart = () => {
     if (!isAuth) { requireAuth(); return; }
     onAddToCart(p);
@@ -85,10 +100,6 @@ export function DetalleProductoPage({ product, onNavigate, userRole, onLogout, o
                 <button type="button" onClick={handleCart}
                   className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-colors cursor-pointer ${added ? "bg-green-500 text-white" : "bg-slate-900 hover:bg-blue-600 text-white"}`}>
                   <CartIcon size={16} />{added ? "¡Agregado al carrito!" : "Agregar al carrito"}
-                </button>
-                <button type="button" onClick={handleApartar}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer">
-                  <Clock size={16} />Apartar ahora mismo
                 </button>
               </div>
             </div>

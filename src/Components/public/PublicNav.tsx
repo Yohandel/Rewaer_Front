@@ -59,10 +59,6 @@ export function PublicNav({ onNavigate, userRole, onLogout, currentPage, cartCou
             {link("Contacto", "contacto")}
           </nav>
           <div className="hidden md:flex items-center gap-3">
-            <div className="relative">
-              <input type="text" placeholder="Buscar artículo..." className="bg-slate-100 rounded-full pl-10 pr-4 py-1.5 text-sm outline-none w-48 lg:w-56 text-slate-900" />
-              <Search className="absolute left-3 top-2 w-4 h-4 text-slate-400" />
-            </div>
 
             <button type="button" onClick={() => onNavigate("carrito")}
               className={`relative p-2 rounded-full transition-colors cursor-pointer ${currentPage === "carrito" ? "bg-blue-100 text-blue-600" : "text-slate-500 hover:bg-slate-100"}`}>

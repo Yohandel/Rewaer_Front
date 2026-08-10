@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ShoppingCart as CartIcon, Clock } from 'lucide-react';
-import { Product } from '../../Types';
 import { StatusBadge } from '../Common/StatusBadge';
 import { ProductResponse } from '../../interfaces/IProduct';
 import { getImageUrl } from '../../utils/image';
@@ -35,10 +34,6 @@ export function ProductCard({ product, onDetail, onRequireAuth, onAddToCart, use
           <button type="button" onClick={handleCart}
             className={`w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg transition-colors cursor-pointer ${added ? "bg-green-500 text-white" : "bg-slate-900 hover:bg-blue-600 text-white"}`}>
             <CartIcon size={13} />{added ? "¡Agregado!" : "Agregar al carrito"}
-          </button>
-          <button type="button" onClick={handleApartar}
-            className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer">
-            <Clock size={13} />Apartar ahora mismo
           </button>
         </div>
       </div>

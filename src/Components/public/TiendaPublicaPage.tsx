@@ -5,7 +5,7 @@ import { PublicNav } from './PublicNav';
 import { ProductResponse } from '../../interfaces/IProduct';
 import { getProducts } from '../../services/productService';
 import { getImageUrl } from '../../utils/image';
-import { StatusBadge } from '../common/StatusBadge';
+import { StatusBadge } from '../Common/StatusBadge';
 
 export function TiendaPublicaPage({ onNavigate, userRole, onLogout, cartCount, onSelectProduct }: {
   onNavigate: (p: Page) => void; userRole: string | null;

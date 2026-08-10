@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Page, Product } from '../../Types';
 import { PublicNav } from './PublicNav';
 import { ProductCard } from './ProductCard';
 import { Toast } from '../Common/Toast';
 import { ProductResponse } from '../../interfaces/IProduct';
+import { getProducts } from '../../services/productService';
 
-export function CatalogoPage({ onNavigate, userRole, onLogout, onSelectProduct, onAddToCart, cartCount, products }: {
+export function CatalogoPage({ onNavigate, userRole, onLogout, onSelectProduct, onAddToCart, cartCount }: {
   onNavigate: (p: Page) => void; userRole: string | null; onLogout: () => void;
-  onSelectProduct: (id: number) => void; onAddToCart: (p: ProductResponse) => void; cartCount: number; products: ProductResponse[];
+  onSelectProduct: (id: number) => void; onAddToCart: (p: ProductResponse) => void; cartCount: number;
 }) {
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState(false);
+  const handleRequireAuth = () => { setToast(true); onNavigate("login"); };
+  const [products, setProducts] = useState<ProductResponse[]>([]);
   const activedProducts = products.filter(p => p.estado === "Activo" && p.stock > 0);
   const filtered = activedProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.categoryName.toLowerCase().includes(search.toLowerCase()));
-  const handleRequireAuth = () => { setToast(true); onNavigate("login"); };
+  useEffect(() => {
+    getProducts()
+      .then(products => setProducts(products.filter(p => p.stock > 0)))
+      .catch(err => console.error("Error al cargar el catálogo:", err));
+  }, []);
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       {toast && <Toast message="Debes iniciar sesión o registrarte para acceder a esta funcionalidad" onClose={() => setToast(false)} />}

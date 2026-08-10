@@ -35,13 +35,11 @@ import { PermissionsPage } from '../Components/admin/PermissionsPage';
 import { PERMISSION_KEYS, hasPermission } from '../utils/permissions';
 import { MisPedidosPage } from '../Components/public/MisPedidosPage';
 import { MiPerfilPage } from '../Components/public/MiPerfilPage';
-import { Toast } from '../Components/common/Toast';
+import { Toast } from '../Components/Common/Toast';
 import { PerfilPage } from '../Components/admin/PerfilPage';
 
-// Arma un AuthUser enriquecido (roleName + permisos si es empleado) a partir del guardado/base.
-// Lanza el error tal cual para que el caller decida qué hacer con él (401 vs error transitorio).
 async function enrichAuthUser(base: AuthUser): Promise<AuthUser> {
-  const me = await getMe(); // si falla, se propaga (401, red, CORS, etc.)
+  const me = await getMe(); 
   let user: AuthUser = { ...base, id: me.id, nombre: me.name, email: me.email, roleName: me.role };
 
   if (user.role === "admin") {
@@ -49,7 +47,6 @@ async function enrichAuthUser(base: AuthUser): Promise<AuthUser> {
       const permNames = await getMyPermissionNames(Number(user.id));
       user = { ...user, permissions: permNames };
     } catch {
-      // Falla al traer permisos no debe invalidar la sesión, solo se queda sin permisos extra por ahora
       user = { ...user, permissions: user.permissions ?? [] };
     }
   }
@@ -78,20 +75,16 @@ export default function App() {
     setToast({ msg, variant }); setTimeout(() => setToast(null), 3500);
   };
 
-  // Catálogo público — independiente de la sesión
   useEffect(() => {
     getProducts().then(setProducts).catch(err => setProductsError(err.message || "No se pudo cargar el catálogo"));
   }, []);
 
-  // ── ARRANQUE DE SESIÓN: una sola secuencia async, sin condiciones de carrera ──
   useEffect(() => {
     let cancelled = false;
 
     async function bootstrapSession() {
       const stored = getStoredAuth();
       if (!stored) { if (!cancelled) setCheckingSession(false); return; }
-
-      // Mostramos optimistamente lo guardado mientras se valida contra el backend
       if (!cancelled) {
         setAuthUser(stored);
         setUserRole(stored.role);
@@ -103,9 +96,6 @@ export default function App() {
         setAuthUser(refreshed);
         setStoredAuth(refreshed);
       } catch (err) {
-        // CLAVE: solo cerramos sesión si el backend confirmó que el token es inválido/vencido (401).
-        // Cualquier otro error (red, CORS momentáneo, servidor lento al arrancar) NO debe desloguear:
-        // conservamos la sesión guardada y seguimos con lo que ya teníamos en localStorage.
         const isAuthError = err instanceof ApiError && err.status === 401;
         if (isAuthError) {
           clearStoredAuth();
@@ -116,7 +106,6 @@ export default function App() {
           }
         } else {
           console.warn("No se pudo validar la sesión contra el servidor (se mantiene la sesión guardada):", err);
-          // authUser/userRole ya quedaron seteados de forma optimista arriba; no se tocan.
         }
       } finally {
         if (!cancelled) setCheckingSession(false);
@@ -127,7 +116,6 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // Cargar el carrito del cliente cuando cambia authUser
   useEffect(() => {
     if (authUser?.role === "client") {
       getCartByClient(Number(authUser.id))
@@ -211,7 +199,6 @@ export default function App() {
       try {
         finalUser = await enrichAuthUser(baseUser);
       } catch {
-        // Si /me falla justo tras el login, igual dejamos entrar con lo que devolvió el login
       }
       setStoredAuth(finalUser);
     }
@@ -244,7 +231,7 @@ export default function App() {
 
   const renderView = () => {
     if (currentView === "tienda") return <TiendaPublicaPage {...publicProps} onSelectProduct={setSelectedProductId} />;
-    if (currentView === "catalogo") return <CatalogoPage {...publicProps} products={products} onSelectProduct={setSelectedProductId} />;
+    if (currentView === "catalogo") return <CatalogoPage {...publicProps} onSelectProduct={setSelectedProductId} />;
     if (currentView === "contacto") return <ContactoPage {...publicProps} />;
     if (currentView === "detalle") return <DetalleProductoPage {...publicProps} product={selectedProduct} />;
     if (currentView === "carrito") return <CarritoPage {...publicProps} cart={cart} onUpdateQty={handleUpdateQty} onRemove={handleRemove} onCheckout={handleCheckout} />;
